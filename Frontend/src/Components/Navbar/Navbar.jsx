@@ -58,13 +58,13 @@ const Navbar = () => {
   };
 
   return (
-    <div className="navbar h-10 rounded-md shadow-md mb-3 bg-base-100 transition-colors duration-300">
+    <div className="sticky top-0 z-50 navbar h-10 rounded-md shadow-md bg-base-100/90 backdrop-blur-md transition-colors duration-300">
       <div className="md:w-[90%] md:mx-auto flex justify-between items-center w-full px-2">
         <div className="flex items-center">
           <div className="icon mx-2 text-primary">
             <BuildingStorefrontIcon className="w-6 h-6" />
           </div>
-          <a className="text-xl font-bold">Lab Inventory Management</a>
+          <a className="text-xl font-bold hidden sm:block">Lab Inventory Management</a>
         </div>
         <div className="flex items-center gap-4">
           {/* --- NEW: LAST UPDATED BADGE --- */}

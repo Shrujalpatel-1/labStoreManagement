@@ -36,6 +36,15 @@ const Aside = () => {
     "miscellaneous",
   ];
 
+  const isActivePath = (path) => {
+    return location.pathname === path ? "active" : "";
+  };
+
+  // Checks if we are on the Home dashboard AND the category matches Redux
+  const isCategoryActive = (category) => {
+    return location.pathname === "/" && selectedCategory === category ? "active" : "";
+  };
+
   const showAdd = () => {
     document.getElementById("add_modal").showModal();
   };
@@ -79,7 +88,7 @@ const Aside = () => {
       .join(" ");
   };
   return (
-    <ul className="menu bg-base-200 text-base-content min-h-full w-72 p-4">
+    <ul className="menu bg-base-200 text-base-content w-72 p-4 lg:sticky top-0 rounded-md shadow-md">
       <div className="text-xl pb-2 border-b-2 border-primary">
         Product Categories
       </div>
@@ -88,7 +97,7 @@ const Aside = () => {
         <li key={category} className="mt-2">
           <Link
             to={"/"}
-            className={selectedCategory === category ? "active" : ""}
+            className={isCategoryActive(category)}
             onClick={() => dispatch(setSelectedCategory(category))}
           >
             <ArchiveBoxIcon className="h-6 w-6" />
@@ -97,30 +106,21 @@ const Aside = () => {
         </li>
       ))}
 
-      {/* --- 3. ADD PRODUCT BTN: Visible only on Home Page AND if Storekeeper --- */}
-      {location.pathname === "/" && isStoreKeeper && (
-        <li className="mt-2">
-          <button onClick={showAdd}>
-            <PlusCircleIcon className="h-6 w-6" />
-            Add Product
-          </button>
-        </li>
-      )}
+      {/* --- ADD PRODUCT BTN: Visible only on Home Page AND if Storekeeper --- */}
 
-      {/* --- 4. ISSUED PRODUCTS SECTION: Visible only if Storekeeper --- */}
       {isStoreKeeper && (
         <>
           <div className="text-xl pb-2 border-b-2 border-primary mt-4">
             Issued Products
           </div>
           <li className="mt-2">
-            <Link to={"/issue-product"}>
+            <Link to={"/issue-product"} className={isActivePath("/issue-product")}>
               <PlusCircleIcon className="h-6 w-6" />
               Issue the Product
             </Link>
           </li>
           <li className="mb-4 mt-2">
-            <Link to={"/view-issued"}>
+            <Link to={"/view-issued"} className={isActivePath("/view-issued")}>
               <ChartBarIcon className="h-6 w-6" />
               List
             </Link>
@@ -128,14 +128,14 @@ const Aside = () => {
         </>
       )}
 
-      {/* --- 5. ADMINISTRATION SECTION: Visible only if Lab Coordinator --- */}
+      {/* --- ADMINISTRATION SECTION: Visible only if Lab Coordinator --- */}
       {isLabCoordinator && (
         <>
           <div className="text-xl pb-2 border-b-2 border-primary mt-4">
             Administration
           </div>
           <li className="mt-2 mb-4">
-            <Link to={"/users"} className={location.pathname === "/users" ? "active" : ""}>
+            <Link to={"/users"} className={isActivePath("/users")}> {/* <-- Standardized active check */}
               <UsersIcon className="h-6 w-6" />
               User Management
             </Link>
@@ -147,7 +147,7 @@ const Aside = () => {
         Manage Account
       </div>
       <li className="mt-2">
-        <Link to={"/profile"}>
+        <Link to={"/profile"} className={isActivePath("/profile")}> {/* <-- Added active check */}
           <UserCircleIcon className="h-6 w-6" />
           Profile
         </Link>

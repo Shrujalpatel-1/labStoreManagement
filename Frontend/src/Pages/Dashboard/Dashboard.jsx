@@ -391,7 +391,7 @@ const Dashboard = () => {
 
   return (
     isLogin && (
-      <div className="md:w-[90%] md:mx-auto">
+      <div className="md:w-[90%] mt-3 md:mx-auto">
         <div className="drawer lg:drawer-open">
           <input
             id="sidebar_drawer"
@@ -516,7 +516,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          <div className="drawer-side md:h-[80vh] h-full">
+          <div className="drawer-side md:h-[88vh]">
             <label
               htmlFor="sidebar_drawer"
               aria-label="close sidebar"

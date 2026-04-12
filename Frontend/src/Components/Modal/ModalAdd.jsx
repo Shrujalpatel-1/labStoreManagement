@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
@@ -7,13 +7,31 @@ import { setLastUpdated } from "../../Redux/products/productSlice";
 
 const ModalAdd = (props) => {
   const dispatch = useDispatch();
-  const products = useSelector((state) => state.product.products);
+  
+  // 1. Fetch categories from Redux (with fallback to defaults just in case)
+  const categoriesList = useSelector((state) => state.product.categoriesList || [
+    "chemical",
+    "teaching_kit",
+    "plasticware",
+    "glassware",
+    "miscellaneous"
+  ]);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm({});
+    watch,
+  } = useForm();
+
+  // 2. Track the selected dropdown category so the specific fields update instantly
+  const currentCategory = watch("category", props.selectedCategory);
+
+  // 3. Keep the dropdown in sync with the Sidebar selection when the modal opens
+  useEffect(() => {
+    reset({ category: props.selectedCategory });
+  }, [props.selectedCategory, reset]);
 
   // --- Strict validation ONLY for required fields (Name) ---
   const validateRequired = (value, fieldName) => {
@@ -48,15 +66,12 @@ const ModalAdd = (props) => {
     if (!cleanData.quantityOrdered) delete cleanData.quantityOrdered;
     if (!cleanData.quantityAvailable) delete cleanData.quantityAvailable;
 
-    // Merge with category and send
-    const productData = { ...cleanData, category: props.selectedCategory };
-
     let myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     let requestOptions = {
       method: "POST",
       headers: myHeaders,
-      body: JSON.stringify(productData),
+      body: JSON.stringify(cleanData),
       redirect: "follow",
       credentials: "include",
     };
@@ -70,7 +85,7 @@ const ModalAdd = (props) => {
 
       if (result.status) {
         toast.success("Product added successfully");
-        props.fetchProductsByCategory(props.selectedCategory);
+        props.fetchProductsByCategory(currentCategory);
         dispatch(setLastUpdated(new Date().toISOString()));
       } else {
         toast.error(result.message || "Something went wrong! try again");
@@ -93,7 +108,7 @@ const ModalAdd = (props) => {
   };
 
   const renderCategorySpecificFields = () => {
-    switch (props.selectedCategory) {
+    switch (currentCategory) {
       case "chemical":
       case "teaching_kit":
         return (
@@ -215,8 +230,8 @@ const ModalAdd = (props) => {
     <div>
       <dialog id={props.id} className="modal">
         <div className="modal-box">
-          <h3 className="font-bold text-lg">
-            Add {props.selectedCategory.replace("_", " ")} Product
+          <h3 className="font-bold text-lg capitalize">
+            Add {currentCategory?.replace(/_/g, " ")} Product
           </h3>
 
           <form
@@ -227,15 +242,24 @@ const ModalAdd = (props) => {
             <div>
               <label className="form-control w-full lg:max-w-xs px-2">
                 <div className="label">
-                  <span className="label-text">Category</span>
+                  <span className="label-text">Category *</span>
                 </div>
-                <input
-                  type="text"
-                  placeholder="Type here"
-                  className="input input-bordered w-full lg:max-w-xs capitalize"
-                  disabled
-                  value={props.selectedCategory.replace("_", " ")}
-                />
+                <select
+                  {...register("category", { required: "Category is required" })}
+                  className="select select-bordered w-full lg:max-w-xs capitalize"
+                >
+                  <option value="" disabled>-- Select Category --</option>
+                  {categoriesList.map((cat) => (
+                    <option key={cat} value={cat} className="capitalize">
+                      {cat.replace(/_/g, " ")}
+                    </option>
+                  ))}
+                </select>
+                {errors.category && (
+                  <p className="text-xs text-red-600 ps-2 mt-1">
+                    {errors.category.message}
+                  </p>
+                )}
               </label>
 
               {/* --- Product Name (STILL REQUIRED) --- */}
@@ -265,7 +289,7 @@ const ModalAdd = (props) => {
                   <span className="label-text">Quantity Ordered</span>
                 </div>
                 <input
-                  type="text"
+                  type="number"
                   {...register("quantityOrdered", {
                     validate: (v) => validateQuantity(v, "Quantity Ordered"),
                   })}
@@ -287,7 +311,7 @@ const ModalAdd = (props) => {
                   <span className="label-text">Quantity Available</span>
                 </div>
                 <input
-                  type="text"
+                  type="number"
                   {...register("quantityAvailable", {
                     validate: (v) => validateQuantity(v, "Quantity Available"),
                   })}
@@ -307,10 +331,10 @@ const ModalAdd = (props) => {
             </div>
             <div className="modal-action">
               <div>
-                <button className="btn mx-2 px-6 btn-sm btn-primary text-white">
+                <button type="submit" className="btn mx-2 px-6 btn-sm btn-primary text-white">
                   Add
                 </button>
-                <button className="btn mx-2 px-6 btn-sm" onClick={clearForm}>
+                <button type="button" className="btn mx-2 px-6 btn-sm" onClick={clearForm}>
                   Cancel
                 </button>
               </div>

@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media (min-width: 1024px) {
+  /* 1. Prevent DaisyUI from hiding overflow, which breaks position: sticky */
+  .drawer.lg\:drawer-open {
+    overflow: visible !important;
+  }
+  
+  /* 2. Force the sidebar container to stick right below the Navbar */
+  .drawer.lg\:drawer-open > .drawer-side {
+    position: sticky !important;
+    top: 4rem !important; /* Locks it right beneath your sticky navbar */
+    height: calc(100vh - 4rem) !important; /* Forces it to span exactly to the bottom of the screen */
+    max-height: calc(100vh - 4rem) !important;
+    align-self: start; /* Grid property that allows sticky to work perfectly */
+  }
+}

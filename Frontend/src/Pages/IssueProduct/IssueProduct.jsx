@@ -123,19 +123,13 @@ const IssueProduct = () => {
       const result = await response.json();
       
       if (result.status) {
-        toast.success("Item issued & stock updated!");
+        toast.success("Item issued & stock updated");
         dispatch(setProducts([])); // Force dashboard refresh
         dispatch(setIssuedItems([])); // Force lists refresh
         dispatch(setLastUpdated(new Date().toISOString()));
-        // Update local dropdown state to reflect deduction instantly without refreshing page
-        setAllProducts(prev => prev.map(p => {
-            if (p._id === selectedProduct.productId) {
-                return { ...p, quantityAvailable: p.quantityAvailable - selectedProduct.quantity };
-            }
-            return p;
-        }).filter(p => p.quantityAvailable > 0)); // Remove from dropdown if it hits 0
 
         resetAllFields();
+        navigate("/view-issued");
       } else {
         toast.error(result.message || "Failed to issue item");
       }
@@ -145,7 +139,7 @@ const IssueProduct = () => {
   };
 
   return (
-    <div className="md:w-[90%] md:mx-auto">
+    <div className="md:w-[90%] mt-3 md:mx-auto">
       <div className="drawer lg:drawer-open">
         <input id="sidebar_drawer" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content px-4">
@@ -239,7 +233,7 @@ const IssueProduct = () => {
             </div>
           </form>
         </div>
-        <div className="drawer-side md:h-[80vh] h-full">
+        <div className="drawer-side md:h-[88vh]">
           <label htmlFor="sidebar_drawer" aria-label="close sidebar" className="drawer-overlay"></label>
           <Aside />
         </div>

@@ -262,7 +262,7 @@ const ViewIssuedItems = () => {
           )}
         </div>
 
-        <div className="drawer-side md:h-[80vh] h-full">
+        <div className="drawer-side md:h-[88vh]">
           <label htmlFor="sidebar_drawer" aria-label="close sidebar" className="drawer-overlay"></label>
           <Aside />
         </div>

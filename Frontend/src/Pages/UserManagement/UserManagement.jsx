@@ -64,7 +64,7 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="md:w-[90%] md:mx-auto">
+    <div className="md:w-[90%] mt-3 md:mx-auto">
       <div className="drawer lg:drawer-open">
         <input id="sidebar_drawer" type="checkbox" className="drawer-toggle" />
         
@@ -107,7 +107,7 @@ const UserManagement = () => {
             </tbody>
           </table>
         </div>
-        <div className="drawer-side md:h-[80vh] h-full"><Aside /></div>
+        <div className="drawer-side md:h-[88vh]"><Aside /></div>
       </div>
 
       <dialog id="add_user_modal" className="modal">

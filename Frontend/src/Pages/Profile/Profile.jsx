@@ -161,7 +161,7 @@ const Profile = () => {
         </div>
 
         {/* --- SIDEBAR --- */}
-        <div className="drawer-side md:h-[80vh] h-full">
+        <div className="drawer-side md:h-[88vh] mt-3">
           <label
             htmlFor="sidebar_drawer"
             aria-label="close sidebar"
