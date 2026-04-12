@@ -9,7 +9,7 @@ import Aside from "../../Components/Aside/Aside";
 import baseUrl from "../../utils/baseurl";
 import toast, { Toaster } from "react-hot-toast";
 import { setIssuedItems } from "../../Redux/issue/issueSlice";
-import { setProducts } from "../../Redux/products/productSlice";
+import { setProducts, setLastUpdated } from "../../Redux/products/productSlice";
 
 const ViewIssuedItems = () => {
   const navigate = useNavigate();
@@ -77,6 +77,7 @@ const ViewIssuedItems = () => {
       if (result.status) {
         toast.success("Item deleted successfully");
         getIssuedItems();
+        dispatch(setLastUpdated(new Date().toISOString()));
       } else {
         toast.error(result.message || "Something went wrong!");
       }
@@ -109,6 +110,7 @@ const ViewIssuedItems = () => {
         toast.success("Item returned & stock updated!");
         getIssuedItems(); 
         dispatch(setProducts([])); // Clear product cache so dashboard fetches fresh stock
+        dispatch(setLastUpdated(new Date().toISOString()));
       } else {
         toast.error(result.message || "Failed to return item");
       }
@@ -224,9 +226,9 @@ const ViewIssuedItems = () => {
                           {!elem.isReturnable ? (
                             <span className="badge badge-ghost badge-sm p-4">Non-Returnable</span>
                           ) : elem.isReturned ? (
-                            <span className="badge badge-success badge-sm text-white p-5">Returned<br/> {formatDate(elem.actualReturnDate)}</span>
+                            <span className="badge badge-success badge-sm text-white p-4">Returned<br/> {formatDate(elem.actualReturnDate)}</span>
                           ) : (
-                            <span className={`badge badge-sm text-white ${isOverdue ? 'badge-error' : 'badge-warning'}`}>
+                            <span className={`badge badge-sm text-white p-4 ${isOverdue ? 'badge-error' : 'badge-warning'}`}>
                               Pending
                             </span>
                           )}

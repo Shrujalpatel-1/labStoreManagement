@@ -60,6 +60,8 @@ const issuedItemSchema = new mongoose.Schema(
   }
 );
 
+issuedItemSchema.index({ updatedAt: -1 });
+
 const IssuedItem = mongoose.model("IssuedItem", issuedItemSchema);
 
 export default IssuedItem;

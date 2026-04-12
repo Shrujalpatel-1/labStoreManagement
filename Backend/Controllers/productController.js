@@ -1,4 +1,5 @@
 import Product from "../Models/productModal.js";
+import IssuedItem from "../Models/issueModal.js";
 
 // ✅ Get all products of a specific category
 export const getProductsByCategoryController = async (req, res) => {
@@ -104,5 +105,28 @@ export const getAllProductsController = async (req, res) => {
     return res.status(200).json({ status: true, data: products });
   } catch (error) {
     return res.status(500).json({ status: false, message: "Failed to fetch all products", error });
+  }
+};
+
+// ✅ Get Global Last Updated Timestamp
+export const getLastUpdatedController = async (req, res) => {
+  try {
+    // .lean() and .select() make this query extremely lightweight
+    const latestProduct = await Product.findOne().sort({ updatedAt: -1 }).select('updatedAt').lean();
+    const latestIssue = await IssuedItem.findOne().sort({ updatedAt: -1 }).select('updatedAt').lean();
+
+    let lastUpdated = null;
+    const pDate = latestProduct?.updatedAt;
+    const iDate = latestIssue?.updatedAt;
+
+    if (pDate && iDate) {
+      lastUpdated = pDate > iDate ? pDate : iDate;
+    } else {
+      lastUpdated = pDate || iDate || null;
+    }
+
+    return res.status(200).json({ status: true, data: { lastUpdated } });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: "Failed to fetch last updated date", error });
   }
 };

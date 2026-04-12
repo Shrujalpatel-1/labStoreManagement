@@ -42,7 +42,10 @@ const productSchema = new mongoose.Schema({
   dateOfExpiry: {
     type: Date, // only for chemicals
   },
-});
+}, { timestamps: true });
+
+// Explicit index for O(1) query performance
+productSchema.index({ updatedAt: -1 });
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;

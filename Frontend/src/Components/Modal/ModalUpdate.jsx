@@ -2,8 +2,11 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
 import baseUrl from "../../utils/baseurl";
+import { useDispatch } from "react-redux";
+import { setLastUpdated } from "../../Redux/products/productSlice";
 
 const ModalUpdate = (props) => {
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -71,6 +74,7 @@ const ModalUpdate = (props) => {
       if (result.status) {
         toast.success("Product updated successfully");
         props.fetchProductsByCategory(props.selectedCategory);
+        dispatch(setLastUpdated(new Date().toISOString()));
       } else {
         toast.error(result.message || "Something went wrong! try again");
         console.log("Error::Modal Update::result", result.message);

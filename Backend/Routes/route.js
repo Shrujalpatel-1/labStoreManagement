@@ -12,6 +12,7 @@ import {
   insertProductController,
   updateProductController,
   deleteProductController,
+  getLastUpdatedController
 } from "../Controllers/productController.js";
 
 import {
@@ -32,6 +33,7 @@ route.post("/login", loginController);
 route.post("/register", registerController);
 route.get("/logout", logoutController);
 route.get("/getUser", authMiddleware, getUserController);
+route.get("/system/last-updated", authMiddleware, getLastUpdatedController);
 
 //
 //  PRODUCT ENDPOINTS

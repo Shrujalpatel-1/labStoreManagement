@@ -2,8 +2,10 @@ import React from "react";
 import { useDispatch } from "react-redux";
 import baseUrl from "../../utils/baseurl";
 import toast, { Toaster } from "react-hot-toast";
+import { setLastUpdated } from "../../Redux/products/productSlice";
 
 const Modal = (props) => {
+  const dispatch = useDispatch();
   const handleDelete = async () => {
     let myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -27,6 +29,7 @@ const Modal = (props) => {
         toast.success("Product deleted successfully");
         // to refresh,
         props.fetchProductsByCategory(props.selectedCategory); // Pass category to refetch
+        dispatch(setLastUpdated(new Date().toISOString()));
       } else {
         toast.error("Something went wrong! try again");
         console.log("Error::Modal Delete::result", result.message);

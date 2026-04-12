@@ -6,7 +6,7 @@ import Aside from "../../Components/Aside/Aside";
 import { useForm } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
 import baseUrl from "../../utils/baseurl";
-import { setProducts } from "../../Redux/products/productSlice";
+import { setProducts, setLastUpdated } from "../../Redux/products/productSlice";
 import { setIssuedItems } from "../../Redux/issue/issueSlice";
 
 const IssueProduct = () => {
@@ -126,7 +126,7 @@ const IssueProduct = () => {
         toast.success("Item issued & stock updated!");
         dispatch(setProducts([])); // Force dashboard refresh
         dispatch(setIssuedItems([])); // Force lists refresh
-        
+        dispatch(setLastUpdated(new Date().toISOString()));
         // Update local dropdown state to reflect deduction instantly without refreshing page
         setAllProducts(prev => prev.map(p => {
             if (p._id === selectedProduct.productId) {

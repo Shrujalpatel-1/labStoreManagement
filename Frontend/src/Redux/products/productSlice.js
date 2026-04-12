@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   products: [],
   selectedCategory: "chemical", // Default category
+  lastUpdaetd: null,
 };
 
 export const productSlice = createSlice({
@@ -15,9 +16,12 @@ export const productSlice = createSlice({
     setSelectedCategory: (state, action) => {
       state.selectedCategory = action.payload;
     },
+    setLastUpdated: (state, action) => {
+      state.lastUpdaetd = action.payload;
+    }
   },
 });
 
-export const { setProducts, setSelectedCategory } = productSlice.actions;
+export const { setProducts, setSelectedCategory, setLastUpdated } = productSlice.actions;
 
 export default productSlice.reducer;

@@ -238,6 +238,7 @@ const Dashboard = () => {
             <th>Lot No</th>
             <th>Purchase Date</th>
             <th>Expiry Date</th>
+            <th>Last Updated</th>
             {isStoreKeeper && <th>Action</th>}
           </tr>
         );
@@ -253,6 +254,7 @@ const Dashboard = () => {
             <th>Brand</th>
             <th>Lot No</th>
             <th>Purchase Date</th>
+            <th>Last Updated</th>
             {isStoreKeeper && <th>Action</th>}
           </tr>
         );
@@ -261,6 +263,7 @@ const Dashboard = () => {
           <tr>
             <th>S.No</th>
             <th>Name</th>
+            <th>Last Updated</th>
             {isStoreKeeper && <th>Action</th>}
           </tr>
         );
@@ -300,6 +303,10 @@ const Dashboard = () => {
     if (elem.dateOfExpiry && new Date(elem.dateOfExpiry) < today) {
       rowClassName += " text-error";
     }
+    const formattedUpdateDate = elem.updatedAt 
+      ? new Date(elem.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute:'2-digit' }) 
+      : "N/A";
+    
     const commonFields = (
       <>
         <td>{elem.name}</td>
@@ -307,7 +314,7 @@ const Dashboard = () => {
         <td>{elem.quantityAvailable}</td>
         <td>{elem.brand}</td>
         <td>{elem.lotNo}</td>
-        <td>{new Date(elem.dateOfPurchase).toLocaleDateString()}</td>
+        <td>{elem.dateOfPurchase ? new Date(elem.dateOfPurchase).toLocaleDateString() : "N/A"}</td>
       </>
     );
 
@@ -324,18 +331,18 @@ const Dashboard = () => {
               </div>
             </th>
             <td>{elem.name}</td>
-            {/* --- CHANGED: Only render Storage Temp cell if category is chemical --- */}
             {elem.category === "chemical" && <td>{elem.storageTemp}</td>}
             <td>{elem.quantityOrdered}</td>
             <td>{elem.quantityAvailable}</td>
             <td>{elem.brand}</td>
             <td>{elem.lotNo}</td>
-            <td>{new Date(elem.dateOfPurchase).toLocaleDateString()}</td>
+            <td>{elem.dateOfPurchase ? new Date(elem.dateOfPurchase).toLocaleDateString() : "N/A"}</td>
             <td>
               {elem.dateOfExpiry
                 ? new Date(elem.dateOfExpiry).toLocaleDateString()
                 : "N/A"}
             </td>
+            <td>{formattedUpdateDate}</td>
             {isStoreKeeper && renderActionButtons(elem, i)}
           </tr>
         );
@@ -351,6 +358,7 @@ const Dashboard = () => {
               </div>
             </th>
             {commonFields}
+            <td>{formattedUpdateDate}</td>
             {isStoreKeeper && renderActionButtons(elem, i)}
           </tr>
         );
@@ -359,6 +367,7 @@ const Dashboard = () => {
           <tr className="hover" key={elem._id}>
             <th>{i + 1}</th>
             <td>{elem.name}</td>
+            <td>{formattedUpdateDate}</td>
             {isStoreKeeper && renderActionButtons(elem, i)}
           </tr>
         );
