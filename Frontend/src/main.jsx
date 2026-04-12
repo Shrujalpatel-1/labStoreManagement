@@ -17,6 +17,7 @@ import { Provider } from "react-redux";
 import { store } from "./Redux/Store.js";
 import Auth from "./Pages/Auth/Auth.jsx";
 import Profile from "./Pages/Profile/Profile.jsx";
+import UserManagement from "./Pages/UserManagement/UserManagement.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -27,6 +28,7 @@ const router = createBrowserRouter(
       <Route path="/issue-product" element={<IssueProduct />} />
       <Route path="/view-issued" element={<ViewIssued />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/users" element={<UserManagement />} />
     </Route>
   )
 );

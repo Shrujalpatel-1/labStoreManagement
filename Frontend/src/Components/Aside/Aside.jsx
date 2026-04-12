@@ -4,6 +4,7 @@ import {
   ChartBarIcon,
   PlusCircleIcon,
   UserCircleIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -25,6 +26,7 @@ const Aside = () => {
 
   // --- 2. CHECK PERMISSION ---
   const isStoreKeeper = role === "storekeeper";
+  const isLabCoordinator = role === "lab_coordinator";
 
   const productCategories = [
     "chemical",
@@ -119,6 +121,21 @@ const Aside = () => {
             <Link to={"/view-issued"}>
               <ChartBarIcon className="h-6 w-6" />
               List
+            </Link>
+          </li>
+        </>
+      )}
+
+      {/* --- 5. ADMINISTRATION SECTION: Visible only if Lab Coordinator --- */}
+      {isLabCoordinator && (
+        <>
+          <div className="text-xl pb-2 border-b-2 border-primary mt-4">
+            Administration
+          </div>
+          <li className="mt-2 mb-4">
+            <Link to={"/users"} className={location.pathname === "/users" ? "active" : ""}>
+              <UsersIcon className="h-6 w-6" />
+              User Management
             </Link>
           </li>
         </>

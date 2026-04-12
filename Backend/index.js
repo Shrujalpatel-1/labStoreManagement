@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { route } from './Routes/route.js';
 import 'dotenv/config'
 import connectDB from './Db/index.js';
+import User from './Models/userModel.js';
 
 
 const server = express();
@@ -21,8 +22,20 @@ server.use(express.urlencoded({ extended: true }));
 
 // connect to db:
 connectDB()
-.then(()=>{
+.then(async ()=>{
   // starting the server 
+    try {
+      const migrated = await User.updateMany(
+        { role: "faculty" }, 
+        { $set: { role: "lab_coordinator" } }
+      );
+      if (migrated.modifiedCount > 0) {
+        console.log(`Migrated ${migrated.modifiedCount} faculty to lab_coordinator.`);
+      }
+    } catch (err) {
+      console.error("Migration failed:", err);
+    }
+
     server.listen(PORT , ()=>{
         console.log("Server is running at " + PORT);
     })

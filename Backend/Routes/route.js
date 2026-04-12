@@ -3,7 +3,11 @@ import {
   getUserController,
   loginController,
   logoutController,
-  registerController,
+  getSetupStatus,
+  setupInitialUserController,
+  addUserController,
+  getAllUsersController,
+  deleteUserController
 } from "../Controllers/authController.js";
 
 import {
@@ -30,10 +34,14 @@ export const route = Router();
 // 茶 AUTH ENDPOINTS
 //
 route.post("/login", loginController);
-route.post("/register", registerController);
 route.get("/logout", logoutController);
 route.get("/getUser", authMiddleware, getUserController);
-route.get("/system/last-updated", authMiddleware, getLastUpdatedController);
+route.get("/system/last-updated ", authMiddleware, getLastUpdatedController);
+route.get("/auth/setup-status", getSetupStatus);
+route.post("/auth/setup", setupInitialUserController);
+route.post("/users/add", authMiddleware, addUserController);
+route.get("/users/list", authMiddleware, getAllUsersController);
+route.post("/users/delete", authMiddleware, deleteUserController);
 
 //
 //  PRODUCT ENDPOINTS
