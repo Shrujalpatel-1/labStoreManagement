@@ -12,7 +12,7 @@ const Auth = () => {
   const [loadingStatus, setLoadingStatus] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const MNNIT_LOGO = logo;
 
@@ -107,7 +107,7 @@ const Auth = () => {
       </div>
 
       {/* --- MAIN CARD --- */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-[480px]">
+      <div className="sm:mx-auto sm:w-full sm:max-w-[500px]">
         <div className="py-10 px-6 shadow-xl sm:rounded-2xl sm:px-12 border transition-colors duration-300 bg-white border-slate-200 shadow-slate-200/50 dark:bg-slate-800 dark:border-slate-700 dark:shadow-black/30">
           <div className="mb-8">
             <h3 className="text-2xl font-semibold text-blue-950 dark:text-white">
@@ -136,13 +136,22 @@ const Auth = () => {
               <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
                 Email
               </label>
-              <input
-                type="email"
-                {...register("email")}
-                className="w-full p-2.5 border rounded-md bg-white dark:bg-slate-900/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-900/20 dark:focus:ring-blue-500/30"
-                placeholder="you@mnnit.ac.in"
-                required
+              <input 
+                type="email" 
+                placeholder="username@mnnit.ac.in" 
+                {...register("email", { 
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[a-zA-Z0-9._%+-]+@mnnit\.ac\.in$/,
+                    message: "Only @mnnit.ac.in domains are allowed"
+                  }
+                })} 
+                className="input input-bordered w-full" 
               />
+              
+              {errors.email && (
+                 <span className="text-xs text-error mt-1 block px-1">{errors.email.message}</span>
+              )}
             </div>
 
             <div>
@@ -163,14 +172,24 @@ const Auth = () => {
                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
                   Role
                 </label>
-                <select
-                  {...register("role")}
-                  defaultValue="faculty"
-                  className="w-full p-2.5 border rounded-md bg-white dark:bg-slate-900/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-900/20 dark:focus:ring-blue-500/30"
-                >
-                  <option value="faculty">Faculty</option>
-                  <option value="storekeeper">Storekeeper</option>
-                </select>
+                
+                {/* Hidden input to securely send the exact role value to the backend */}
+                <input 
+                  type="hidden" 
+                  value="lab_coordinator" 
+                  {...register("role")} 
+                />
+                
+                {/* Visible disabled input for UX confirmation */}
+                <input
+                  type="text"
+                  value="Lab Coordinator"
+                  disabled
+                  className="w-full p-2.5 border rounded-md bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none"
+                />
+                <p className="text-xs mt-1 text-slate-500 dark:text-slate-400 font-medium">
+                  The initial setup account is strictly assigned as a Lab Coordinator.
+                </p>
               </div>
             )}
 

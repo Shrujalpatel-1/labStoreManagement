@@ -41,6 +41,13 @@ export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email.toLowerCase().endsWith("@mnnit.ac.in")) {
+      return res.status(403).json({ 
+        status: false, 
+        message: "Access Denied: Organization email (@mnnit.ac.in) is strictly required." 
+      });
+    }
+
     // Find the user by email
     const user = await User.findOne({ email });
     if (!user) {
@@ -142,6 +149,12 @@ export const setupInitialUserController = async (req, res) => {
 
     res.status(200).json({ status: true, message: "Initial Lab Coordinator created successfully." });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      // Extract the exact validation message from Mongoose
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ status: false, message: messages.join(", ") });
+    }
+    console.error(error);
     res.status(500).json({ status: false, message: "Server error" });
   }
 };
@@ -176,6 +189,11 @@ export const addUserController = async (req, res) => {
 
     res.status(200).json({ status: true, message: `${role} added successfully.` });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ status: false, message: messages.join(", ") });
+    }
+    console.error(error);
     res.status(500).json({ status: false, message: "Server error" });
   }
 };

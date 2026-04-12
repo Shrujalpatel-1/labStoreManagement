@@ -36,12 +36,13 @@ export const route = Router();
 route.post("/login", loginController);
 route.get("/logout", logoutController);
 route.get("/getUser", authMiddleware, getUserController);
-route.get("/system/last-updated ", authMiddleware, getLastUpdatedController);
 route.get("/auth/setup-status", getSetupStatus);
 route.post("/auth/setup", setupInitialUserController);
 route.post("/users/add", authMiddleware, addUserController);
 route.get("/users/list", authMiddleware, getAllUsersController);
 route.post("/users/delete", authMiddleware, deleteUserController);
+
+route.get("/system/last-updated ", authMiddleware, getLastUpdatedController);
 
 //
 //  PRODUCT ENDPOINTS

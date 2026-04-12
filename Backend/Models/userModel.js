@@ -7,6 +7,13 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
+    validate: {
+      validator: function(v) {
+        // Regex strictly demands EXACTLY @mnnit.ac.in at the end. No subdomains.
+        return /^[a-zA-Z0-9._%+-]+@mnnit\.ac\.in$/.test(v);
+      },
+      message: props => `${props.value} is an invalid domain. Only @mnnit.ac.in is allowed.`
+    },
   },
   password: {
     type: String,

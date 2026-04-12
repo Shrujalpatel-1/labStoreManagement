@@ -41,32 +41,34 @@ const Aside = () => {
   };
 
   const logoutUser = async () => {
-    if (window.confirm("Are you sure to logout?")) {
-      // ... headers setup ...
+    try {
+      const response = await fetch(`${baseUrl}/logout`, {
+        method: "GET", 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Ensures cookies are sent/cleared if your backend uses them
+      });
+      const result = await response.json();
 
-      try {
-        const response = await fetch(`${baseUrl}/logout`, requestOptions);
-        const result = await response.json();
+      if (result.status) {
+        console.log("Logout Success");
 
-        if (result.status) {
-          console.log("Logout Success");
-
-          // The logout reducer in isLogin.js already handles localStorage removal,
-          // but strictly calling it here ensures safety:
-          localStorage.removeItem("mnnit_auth_data");
-
-          dispatch(logout());
-          navigate("/login");
-        } else {
-          alert("Something went wrong! try again");
-        }
-      } catch (error) {
-        console.error("Logout failed:", error);
-        // Force logout on error
+        // The logout reducer in isLogin.js already handles localStorage removal,
+        // but strictly calling it here ensures safety:
         localStorage.removeItem("mnnit_auth_data");
+
         dispatch(logout());
         navigate("/login");
+      } else {
+        alert("Something went wrong! try again");
       }
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Force logout on error
+      localStorage.removeItem("mnnit_auth_data");
+      dispatch(logout());
+      navigate("/login");
     }
   };
   const formatCategory = (text) => {
