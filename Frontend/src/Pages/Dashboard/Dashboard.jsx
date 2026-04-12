@@ -230,8 +230,7 @@ const Dashboard = () => {
           <tr>
             <th>S.No</th>
             <th>Name</th>
-            {/* --- CHANGED: Only show Storage Temp if category is chemical --- */}
-            {selectedCategory === "chemical" && <th>Storage Temp</th>}
+            <th>Storage Temp</th>
             <th>Qty Ordered</th>
             <th>Qty Available</th>
             <th>Brand</th>
@@ -331,7 +330,7 @@ const Dashboard = () => {
               </div>
             </th>
             <td>{elem.name}</td>
-            {elem.category === "chemical" && <td>{elem.storageTemp}</td>}
+            <td>{elem.storageTemp}</td>
             <td>{elem.quantityOrdered}</td>
             <td>{elem.quantityAvailable}</td>
             <td>{elem.brand}</td>

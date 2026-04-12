@@ -118,21 +118,18 @@ const ModalUpdate = (props) => {
       case "teaching_kit":
         return (
           <>
-            {/* --- Only show Storage Temp if category is 'chemical' --- */}
-            {props.updateObj.category === "chemical" && (
-              <label className="form-control w-full lg:max-w-xs px-2">
-                <div className="label">
-                  <span className="label-text">Storage Temperature</span>
-                </div>
-                <input
-                  type="text"
-                  {...register("storageTemp")}
-                  name="storageTemp"
-                  placeholder="e.g., 2-8°C"
-                  className="input input-bordered w-full lg:max-w-xs"
-                />
-              </label>
-            )}
+            <label className="form-control w-full lg:max-w-xs px-2">
+              <div className="label">
+                <span className="label-text">Storage Temperature</span>
+              </div>
+              <input
+                type="text"
+                {...register("storageTemp")}
+                name="storageTemp"
+                placeholder="e.g., 2-8°C"
+                className="input input-bordered w-full lg:max-w-xs"
+              />
+            </label>
 
             <label className="form-control w-full lg:max-w-xs px-2">
               <div className="label">
