@@ -96,3 +96,13 @@ export const deleteProductController = async (req, res) => {
       .json({ status: false, message: "Failed to delete product", error });
   }
 };
+
+// ✅ Get all products (For Dropdowns)
+export const getAllProductsController = async (req, res) => {
+  try {
+    const products = await Product.find({}).sort({ name: 1 });
+    return res.status(200).json({ status: true, data: products });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: "Failed to fetch all products", error });
+  }
+};

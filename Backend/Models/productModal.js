@@ -20,11 +20,13 @@ const productSchema = new mongoose.Schema({
     type: String, // e.g., "2-8°C" or "Room Temperature"
   },
   quantityOrdered: {
-    type: String,
+    type: Number,
+    default: 0,
     //required: true,
   },
   quantityAvailable: {
-    type: String,
+    type: Number,
+    default: 0,
     //required: true,
   },
   brand: {

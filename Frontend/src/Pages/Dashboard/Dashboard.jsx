@@ -383,7 +383,7 @@ const Dashboard = () => {
 
   return (
     isLogin && (
-      <div className="md:w-[80%] md:mx-auto">
+      <div className="md:w-[90%] md:mx-auto">
         <div className="drawer lg:drawer-open">
           <input
             id="sidebar_drawer"

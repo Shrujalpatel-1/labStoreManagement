@@ -1,4 +1,5 @@
 import IssuedItem from "../Models/issueModal.js";
+import Product from "../Models/productModal.js";
 
 export const getIssuedItemsController = async (req, res) => {
   try {
@@ -17,6 +18,7 @@ export const getIssuedItemsController = async (req, res) => {
 export const createIssuedItemController = async (req, res) => {
   try {
     const {
+      productId, // Added productId
       productName,
       quantity,
       studentName,
@@ -27,38 +29,47 @@ export const createIssuedItemController = async (req, res) => {
       expectedReturnDate,
     } = req.body;
 
-    // Build the data object for the new item
+    const numQuantity = Number(quantity);
+
+    // 1. ATOMIC UPDATE: Find the product ONLY if it has enough stock, and decrement it.
+    // This prevents race conditions and over-issuing.
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: productId, quantityAvailable: { $gte: numQuantity } },
+      { $inc: { quantityAvailable: -numQuantity } },
+      { new: true } 
+    );
+
+    if (!updatedProduct) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Failed to issue. Stock is 0 or insufficient quantity available." 
+      });
+    }
+
+    // 2. CREATE ISSUE RECORD
     const newItemData = {
+      productId,
       productName,
-      quantity,
+      quantity: numQuantity,
       studentName,
       registrationNumber,
       course,
       isReturnable,
     };
 
-    // Only add dates if they were provided in the request
-    // If not, the model's 'default' values will be used
     if (issueDate) {
       newItemData.issueDate = issueDate;
     }
-
-    // Only add the expected return date if the item is returnable
-    // and a date was provided
     if (isReturnable && expectedReturnDate) {
-      // Use the 'returnDate' field as defined in your Mongoose schema
       newItemData.returnDate = expectedReturnDate;
     }
 
-    // Create the document.
-    // Your model's 'pre-save' hook will automatically assign the
-    // auto-incrementing 'issueId' (1, 2, 3...)
     const issuedItem = await IssuedItem.create(newItemData);
 
     return res.status(200).json({
       status: true,
-      message: "Item issued successfully", // Updated message
-      data: issuedItem, // Send back the new item
+      message: "Item issued successfully & stock updated",
+      data: issuedItem,
     });
   } catch (error) {
     console.error(error);
@@ -98,5 +109,54 @@ export const deleteIssuedItemController = async (req, res) => {
     res
       .status(500)
       .json({ status: false, message: "Failed to delete item", error });
+  }
+};
+
+export const returnIssuedItemController = async (req, res) => {
+  try {
+    const { issueId } = req.body;
+
+    if (!issueId) {
+      return res.status(400).json({ status: false, message: "issueId is required" });
+    }
+
+    // 1. Find the issued item
+    const issuedItem = await IssuedItem.findById(issueId);
+    
+    if (!issuedItem) {
+      return res.status(404).json({ status: false, message: "Issued item not found" });
+    }
+    if (!issuedItem.isReturnable) {
+      return res.status(400).json({ status: false, message: "This item is strictly non-returnable" });
+    }
+    if (issuedItem.isReturned) {
+      return res.status(400).json({ status: false, message: "Item has already been returned" });
+    }
+
+    // 2. ATOMIC UPDATE: Increment the product's available stock
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: issuedItem.productId },
+      { $inc: { quantityAvailable: issuedItem.quantity } },
+      { new: true }
+    );
+
+    // If product was deleted from DB in the meantime, we still allow marking the issue as returned
+    if (!updatedProduct) {
+      console.warn(`Product ID ${issuedItem.productId} not found. Marking issue as returned anyway.`);
+    }
+
+    // 3. Mark the issue as returned
+    issuedItem.isReturned = true;
+    issuedItem.actualReturnDate = new Date();
+    await issuedItem.save();
+
+    return res.status(200).json({ 
+      status: true, 
+      message: "Item returned successfully and inventory stock restored" 
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: false, message: "Failed to process return", error });
   }
 };

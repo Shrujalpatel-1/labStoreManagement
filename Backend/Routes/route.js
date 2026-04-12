@@ -8,6 +8,7 @@ import {
 
 import {
   getProductsByCategoryController,
+  getAllProductsController,
   insertProductController,
   updateProductController,
   deleteProductController,
@@ -17,6 +18,7 @@ import {
   getIssuedItemsController,
   createIssuedItemController,
   deleteIssuedItemController,
+  returnIssuedItemController,
 } from "../Controllers/issueController.js";
 
 import authMiddleware from "../Middleware/authMiddleware.js";
@@ -24,7 +26,7 @@ import authMiddleware from "../Middleware/authMiddleware.js";
 export const route = Router();
 
 //
-// 🧾 AUTH ENDPOINTS
+// 茶 AUTH ENDPOINTS
 //
 route.post("/login", loginController);
 route.post("/register", registerController);
@@ -32,7 +34,7 @@ route.get("/logout", logoutController);
 route.get("/getUser", authMiddleware, getUserController);
 
 //
-// 📦 PRODUCT ENDPOINTS
+//  PRODUCT ENDPOINTS
 //
 /**
  * Category-based product routes:
@@ -58,10 +60,14 @@ route.post("/products/update", authMiddleware, updateProductController);
 // Delete a product
 route.post("/products/delete", authMiddleware, deleteProductController);
 
+// Get all products (for dropdowns, etc.)
+route.get("/products/all/list", authMiddleware, getAllProductsController);
+
 //
 //  ISSUE ENDPOINTS
 //
 route.get("/getissue", authMiddleware, getIssuedItemsController);
 route.post("/createissue", authMiddleware, createIssuedItemController);
 route.post("/deleteissue", authMiddleware, deleteIssuedItemController);
+route.post("/returnissue", authMiddleware, returnIssuedItemController);
 export default route;

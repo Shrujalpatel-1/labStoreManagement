@@ -4,12 +4,17 @@ import mongoose from "mongoose";
 const issuedItemSchema = new mongoose.Schema(
   {
     // serialNo field has been removed.
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: 'true',
+    },
     productName: {
       type: String,
       required: true,
     },
     quantity: {
-      type: String,
+      type: Number,
       required: true,
       min: 1, // Quantity must be at least 1
     },
@@ -39,6 +44,14 @@ const issuedItemSchema = new mongoose.Schema(
     returnDate: {
       type: Date,
       default: null, // Set to null initially
+    },
+    isReturned: {
+      type: Boolean,
+      default: false,
+    },
+    actualReturnDate: {
+      type: Date,
+      default: null,
     },
   },
   {

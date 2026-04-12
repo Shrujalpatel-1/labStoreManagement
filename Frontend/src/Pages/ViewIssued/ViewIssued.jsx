@@ -8,150 +8,121 @@ import {
 import Aside from "../../Components/Aside/Aside";
 import baseUrl from "../../utils/baseurl";
 import toast, { Toaster } from "react-hot-toast";
-import { setIssuedItems } from "../../Redux/issue/issueSlice"; // Correct import
+import { setIssuedItems } from "../../Redux/issue/issueSlice";
+import { setProducts } from "../../Redux/products/productSlice";
 
-// Renamed component
 const ViewIssuedItems = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const isLogin = useSelector((state) => state.login.loginStatus);
-
-  // Updated to use the issueSlice
   const issuedItemsList = useSelector((state) => state.issue.issuedItems);
 
-  // State for delete confirmation modal
+  // Modal States
   const [itemToDelete, setItemToDelete] = useState(null);
-
-  // --- 1. ADD STATE FOR SEARCH ---
+  const [itemToReturn, setItemToReturn] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Renamed function to get issued items
   const getIssuedItems = async () => {
-    let myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    let requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
-      credentials: "include",
-    };
-
     try {
-      // Updated endpoint
-      const response = await fetch(`${baseUrl}/getissue`, requestOptions);
+      const response = await fetch(`${baseUrl}/getissue`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
-      // Added response.ok check for better error handling
       if (!response.ok) {
-        const errData = await response.json();
-        toast.error(errData.message || "Failed to fetch items");
-        console.log("Error::get items::result", errData.message);
-        if (response.status === 401) {
-          navigate("/login"); // Redirect if not authorized
-        }
-        return;
+        if (response.status === 401) navigate("/login");
+        return toast.error("Failed to fetch items");
       }
 
       const result = await response.json();
       if (result.status) {
-        // Updated to use setIssuedItems
         dispatch(setIssuedItems(result.data));
-      } else {
-        toast.error(result.message || "Could not load items");
-        console.log("Error::get items::result", result.message);
       }
     } catch (error) {
       toast.error("An error occurred");
-      console.log("Error::get items::", error);
-    }
-  };
-
-  // Function to open the delete confirmation modal
-  const openDeleteModal = (issueId) => {
-    setItemToDelete(issueId);
-    const modal = document.getElementById("delete_modal");
-    if (modal) {
-      modal.showModal();
-    }
-  };
-
-  // Function to handle the actual deletion after confirmation
-  const handleDeleteConfirm = async () => {
-    if (!itemToDelete) return;
-
-    let myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    let requestOptions = {
-      method: "POST",
-      body: JSON.stringify({ issueId: itemToDelete }),
-      headers: myHeaders,
-      redirect: "follow",
-      credentials: "include",
-    };
-
-    try {
-      // Updated endpoint
-      const response = await fetch(`${baseUrl}/deleteissue`, requestOptions);
-
-      if (!response.ok) {
-        let errorMsg = "Delete failed. Server error.";
-        try {
-          const errData = await response.json();
-          errorMsg = errData.message || `Error: ${response.status}`;
-        } catch (e) {
-          errorMsg = `Error: ${response.status} ${response.statusText}`;
-        }
-
-        toast.error(errorMsg);
-        console.log("Error::delete issue::response not ok", errorMsg);
-
-        if (response.status === 401) {
-          navigate("/login"); // Redirect if not authorized
-        }
-        return; // Stop execution (finally will still run)
-      }
-
-      const result = await response.json();
-
-      if (result.status) {
-        toast.success("Item deleted successfully");
-        getIssuedItems(); // Refresh the list
-      } else {
-        toast.error(result.message || "Something went wrong! try again");
-        console.log("Error::delete issue::result", result.message);
-      }
-    } catch (error) {
-      toast.error("An error occurred during deletion");
-      console.log("Error::delete issue::", error);
-    } finally {
-      setItemToDelete(null); // Reset the state
-      const modal = document.getElementById("delete_modal");
-      if (modal) {
-        modal.close(); // Close the modal
-      }
     }
   };
 
   useEffect(() => {
     if (!isLogin) {
       navigate("/login");
-    } else {
-      if (issuedItemsList.length <= 0) {
-        getIssuedItems();
-      }
+    } else if (issuedItemsList.length <= 0) {
+      getIssuedItems();
     }
   }, [isLogin, issuedItemsList.length, navigate, dispatch]);
 
-  // Helper to format date
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
 
+  // --- DELETE LOGIC ---
+  const openDeleteModal = (issueId) => {
+    setItemToDelete(issueId);
+    document.getElementById("delete_modal").showModal();
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return;
+    try {
+      const response = await fetch(`${baseUrl}/deleteissue`, {
+        method: "POST",
+        body: JSON.stringify({ issueId: itemToDelete }),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const result = await response.json();
+
+      if (result.status) {
+        toast.success("Item deleted successfully");
+        getIssuedItems();
+      } else {
+        toast.error(result.message || "Something went wrong!");
+      }
+    } catch (error) {
+      toast.error("An error occurred during deletion");
+    } finally {
+      setItemToDelete(null);
+      document.getElementById("delete_modal").close();
+    }
+  };
+
+  // --- RETURN LOGIC ---
+  const openReturnModal = (issueId) => {
+    setItemToReturn(issueId);
+    document.getElementById("return_modal").showModal();
+  };
+
+  const handleReturnConfirm = async () => {
+    if (!itemToReturn) return;
+    try {
+      const response = await fetch(`${baseUrl}/returnissue`, {
+        method: "POST",
+        body: JSON.stringify({ issueId: itemToReturn }),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const result = await response.json();
+
+      if (result.status) {
+        toast.success("Item returned & stock updated!");
+        getIssuedItems(); 
+        dispatch(setProducts([])); // Clear product cache so dashboard fetches fresh stock
+      } else {
+        toast.error(result.message || "Failed to return item");
+      }
+    } catch (error) {
+      toast.error("An error occurred during return");
+    } finally {
+      setItemToReturn(null);
+      document.getElementById("return_modal").close();
+    }
+  };
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // --- 2. CREATE THE FILTERED LIST ---
-  // Filters by Student Name or Product Name, case-insensitive
   const filteredItems = issuedItemsList.filter((item) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -161,7 +132,7 @@ const ViewIssuedItems = () => {
   });
 
   return (
-    <div className="md:w-[80%] md:mx-auto">
+    <div className="md:w-[90%] md:mx-auto">
       {/* main */}
       <div className="drawer lg:drawer-open">
         <input id="sidebar_drawer" type="checkbox" className="drawer-toggle" />
@@ -213,36 +184,33 @@ const ViewIssuedItems = () => {
                 : "No Issued Items Found"}
             </div>
           ) : (
-            <div className="overflow-auto mt-4">
+            <div className="overflow-auto mt-4 pb-20">
               <table className="table">
                 {/* head */}
                 <thead>
                   <tr>
                     <th>S.No</th>
                     <th>Student Name</th>
-                    <th>Reg. Number</th>
+                    <th>Reg. No</th>
                     <th>Product Name</th>
                     <th>Qty</th>
                     <th>Course</th>
-                    <th>Returnable</th>
+                    <th>Status</th>
                     <th>Issue Date</th>
                     <th>Return Date</th>
                     <th>Action</th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  {/* Map over the filtered list */}
-                  {filteredItems.reverse().map((elem, inx) => {
-                    let rowClassName = "hover"; // Default class
-                    const isOverdue =
-                      elem.isReturnable &&
-                      elem.returnDate &&
-                      new Date(elem.returnDate) < today;
-
-                    if (isOverdue) {
-                      rowClassName = "hover bg-error/20"; // Apply light red background
-                    }
+                  {filteredItems.slice().reverse().map((elem, inx) => {
+                    let rowClassName = "hover";
+                    
+                    // Highlight red if overdue AND not yet returned
+                    const isOverdue = elem.isReturnable && !elem.isReturned && elem.returnDate && new Date(elem.returnDate) < today;
+                    
+                    // Highlight green if returned successfully
+                    if (elem.isReturned) rowClassName = "hover bg-success/10";
+                    else if (isOverdue) rowClassName = "hover bg-error/20";
 
                     return (
                       <tr className={rowClassName} key={elem._id}>
@@ -252,22 +220,36 @@ const ViewIssuedItems = () => {
                         <td>{elem.productName}</td>
                         <td>{elem.quantity}</td>
                         <td>{elem.course}</td>
-                        <td>{elem.isReturnable ? "Yes" : "No"}</td>
-                        <td>{formatDate(elem.issueDate)}</td>
                         <td>
-                          {elem.isReturnable
-                            ? formatDate(elem.returnDate)
-                            : "N/A"}
+                          {!elem.isReturnable ? (
+                            <span className="badge badge-ghost badge-sm p-4">Non-Returnable</span>
+                          ) : elem.isReturned ? (
+                            <span className="badge badge-success badge-sm text-white p-5">Returned<br/> {formatDate(elem.actualReturnDate)}</span>
+                          ) : (
+                            <span className={`badge badge-sm text-white ${isOverdue ? 'badge-error' : 'badge-warning'}`}>
+                              Pending
+                            </span>
+                          )}
                         </td>
+                        <td>{formatDate(elem.issueDate)}</td>
+                        <td>{elem.isReturnable ? formatDate(elem.returnDate) : "N/A"}</td>
                         <td>
-                          <button
-                            onClick={() => {
-                              openDeleteModal(elem._id);
-                            }}
-                            className="btn btn-sm btn-error ms-2"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex gap-2">
+                            {elem.isReturnable && !elem.isReturned && (
+                              <button
+                                onClick={() => openReturnModal(elem._id)}
+                                className="btn btn-sm btn-success text-white"
+                              >
+                                Return
+                              </button>
+                            )}
+                            <button
+                              onClick={() => openDeleteModal(elem._id)}
+                              className="btn btn-sm btn-error text-white"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -276,46 +258,45 @@ const ViewIssuedItems = () => {
               </table>
             </div>
           )}
-          {/* table end */}
         </div>
 
         <div className="drawer-side md:h-[80vh] h-full">
-          <label
-            htmlFor="sidebar_drawer"
-            aria-label="close sidebar"
-            className="drawer-overlay"
-          ></label>
+          <label htmlFor="sidebar_drawer" aria-label="close sidebar" className="drawer-overlay"></label>
           <Aside />
         </div>
       </div>
-      {/* main end */}
 
-      {/* Delete Confirmation Modal */}
-      <dialog id="delete_modal" className="modal modal-bottom sm:modal-middle">
+      {/* --- RETURN CONFIRMATION MODAL --- */}
+      <dialog id="return_modal" className="modal modal-bottom sm:modal-middle">
         <div className="modal-box">
-          <h3 className="font-bold text-lg">Confirm Deletion</h3>
+          <h3 className="font-bold text-lg text-success">Confirm Return</h3>
           <p className="py-4">
-            Are you sure you want to delete this issued item? This action cannot
-            be undone.
+            Are you sure this item has been returned? Confirming will restore the quantity back to the main inventory.
           </p>
           <div className="modal-action">
             <div className="flex gap-2">
-              <button
-                className="btn btn-ghost"
-                onClick={() => {
-                  setItemToDelete(null);
-                  document.getElementById("delete_modal").close();
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-error"
-                onClick={handleDeleteConfirm}
-              >
-                Delete
-              </button>
+              <button className="btn btn-ghost" onClick={() => document.getElementById("return_modal").close()}>Cancel</button>
+              <button type="button" className="btn btn-success text-white" onClick={handleReturnConfirm}>Confirm Return</button>
+            </div>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => setItemToReturn(null)}>close</button>
+        </form>
+      </dialog>
+
+      {/* --- DELETE CONFIRMATION MODAL --- */}
+      <dialog id="delete_modal" className="modal modal-bottom sm:modal-middle">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg text-error">Confirm Deletion</h3>
+          <p className="py-4">
+            Are you sure you want to delete this issued item record? This action cannot be undone. 
+            <br/><span className="text-sm font-semibold text-warning mt-2 block">Note: Deleting a record will NOT restore inventory stock. Use "Return" if the item was brought back.</span>
+          </p>
+          <div className="modal-action">
+            <div className="flex gap-2">
+              <button className="btn btn-ghost" onClick={() => document.getElementById("delete_modal").close()}>Cancel</button>
+              <button type="button" className="btn btn-error text-white" onClick={handleDeleteConfirm}>Delete Record</button>
             </div>
           </div>
         </div>
@@ -323,6 +304,7 @@ const ViewIssuedItems = () => {
           <button onClick={() => setItemToDelete(null)}>close</button>
         </form>
       </dialog>
+
       <Toaster />
     </div>
   );

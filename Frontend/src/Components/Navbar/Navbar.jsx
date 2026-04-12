@@ -18,7 +18,7 @@ const Navbar = () => {
   };
   return (
     <div className="navbar h-10  rounded-md shadow-md mb-3">
-      <div className="md:w-[80%] md:mx-auto flex justify-between items-center">
+      <div className="md:w-[90%] md:mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <div className="icon mx-2">
             <BuildingStorefrontIcon className="w-6 h-6" />
