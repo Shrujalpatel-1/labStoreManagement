@@ -20,12 +20,12 @@ const productSchema = new mongoose.Schema({
     type: String, // e.g., "2-8°C" or "Room Temperature"
   },
   quantityOrdered: {
-    type: Number,
+    type: mongoose.Schema.Types.Mixed,
     default: 0,
     //required: true,
   },
   quantityAvailable: {
-    type: Number,
+    type: mongoose.Schema.Types.Mixed,
     default: 0,
     //required: true,
   },

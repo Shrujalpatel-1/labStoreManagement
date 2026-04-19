@@ -25,7 +25,9 @@ const IssueProduct = () => {
     productId: "",
     productName: "",
     quantity: 1,
-    availableStock: 0
+    availableStock: 0,
+    category: "",
+    isAvailableAfterIssue: "yes" // Default for chemicals
   });
 
   const [isReturnable, setIsReturnable] = useState(false);
@@ -48,8 +50,15 @@ const IssueProduct = () => {
         });
         const result = await response.json();
         if (result.status) {
-          // Filter out products with 0 stock to keep UI clean
-          setAllProducts(result.data.filter(p => p.quantityAvailable > 0));
+          // Filter out products with 0 stock OR "no" for chemicals
+          setAllProducts(result.data.filter(p => {
+            if (p.category === "chemical") {
+              // Handle both: new "no" string AND old 0 number
+              return p.quantityAvailable !== "no" && p.quantityAvailable !== 0 && p.quantityAvailable !== "0";
+            }
+            // For others, ensure it's a number > 0
+            return Number(p.quantityAvailable) > 0;
+          }));
         }
       } catch (error) {
         toast.error("Failed to load products list");
@@ -67,21 +76,27 @@ const IssueProduct = () => {
         productId: product._id,
         productName: product.name,
         quantity: 1,
-        availableStock: product.quantityAvailable
+        availableStock: product.quantityAvailable,
+        category: product.category,
+        isAvailableAfterIssue: "yes"
       });
     } else {
-      setSelectedProduct({ productId: "", productName: "", quantity: 1, availableStock: 0 });
+      setSelectedProduct({ productId: "", productName: "", quantity: 1, availableStock: 0, category: "", isAvailableAfterIssue: "yes" });
     }
   };
 
   const handleQuantityChange = (e) => {
-    const qty = Number(e.target.value);
-    setSelectedProduct((prev) => ({ ...prev, quantity: qty }));
+    const val = e.target.value;
+    if (selectedProduct.category === "chemical") {
+      setSelectedProduct((prev) => ({ ...prev, isAvailableAfterIssue: val }));
+    } else {
+      setSelectedProduct((prev) => ({ ...prev, quantity: val }));
+    }
   };
 
   const resetAllFields = () => {
     reset();
-    setSelectedProduct({ productId: "", productName: "", quantity: 1, availableStock: 0 });
+    setSelectedProduct({ productId: "", productName: "", quantity: 1, availableStock: 0, category: "", isAvailableAfterIssue: "yes" });
     setIsReturnable(false);
     setIssueDate("");
     setExpectedReturnDate("");
@@ -91,12 +106,17 @@ const IssueProduct = () => {
     if (!selectedProduct.productId) {
       return toast.error("Please select a product");
     }
-    if (selectedProduct.quantity < 1) {
-      return toast.error("Quantity must be at least 1");
+
+    if (selectedProduct.category !== "chemical") {
+      const numQty = Number(selectedProduct.quantity);
+      if (numQty < 1) {
+        return toast.error("Quantity must be at least 1");
+      }
+      if (numQty > Number(selectedProduct.availableStock)) {
+        return toast.error(`Only ${selectedProduct.availableStock} items available in stock!`);
+      }
     }
-    if (selectedProduct.quantity > selectedProduct.availableStock) {
-      return toast.error(`Only ${selectedProduct.availableStock} items available in stock!`);
-    }
+
     if (isReturnable && !expectedReturnDate) {
       return toast.error("Please provide an expected return date");
     }
@@ -104,13 +124,14 @@ const IssueProduct = () => {
     const payload = {
       productId: selectedProduct.productId,
       productName: selectedProduct.productName,
-      quantity: selectedProduct.quantity,
+      quantity: selectedProduct.category === "chemical" ? 1 : Number(selectedProduct.quantity),
       studentName: data.studentName,
       registrationNumber: data.registrationNumber,
       course: data.course,
       isReturnable,
       ...(issueDate && { issueDate }),
-      ...(isReturnable && expectedReturnDate && { expectedReturnDate })
+      ...(isReturnable && expectedReturnDate && { expectedReturnDate }),
+      ...(selectedProduct.category === "chemical" && { isAvailableAfterIssue: selectedProduct.isAvailableAfterIssue })
     };
 
     try {
@@ -193,16 +214,31 @@ const IssueProduct = () => {
               </label>
 
               <label className="form-control flex-[1] min-w-[150px]">
-                <div className="label"><span className="label-text">Quantity</span></div>
-                <input
-                  type="number"
-                  min="1"
-                  max={selectedProduct.availableStock || 1}
-                  value={selectedProduct.quantity}
-                  onChange={handleQuantityChange}
-                  disabled={!selectedProduct.productId}
-                  className="input input-bordered w-full"
-                />
+                <div className="label">
+                  <span className="label-text">
+                    {selectedProduct.category === "chemical" ? "Is Still Available?" : "Quantity"}
+                  </span>
+                </div>
+                {selectedProduct.category === "chemical" ? (
+                  <select
+                    className="select select-bordered w-full font-bold text-primary"
+                    value={selectedProduct.isAvailableAfterIssue}
+                    onChange={handleQuantityChange}
+                  >
+                    <option value="yes">YES (Still Present)</option>
+                    <option value="no">NO (Empty/Gone)</option>
+                  </select>
+                ) : (
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedProduct.availableStock || 1}
+                    value={selectedProduct.quantity}
+                    onChange={handleQuantityChange}
+                    disabled={!selectedProduct.productId}
+                    className="input input-bordered w-full"
+                  />
+                )}
               </label>
             </div>
 

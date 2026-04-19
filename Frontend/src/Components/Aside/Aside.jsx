@@ -2,6 +2,7 @@ import {
   ArchiveBoxIcon,
   ArrowLeftEndOnRectangleIcon,
   ChartBarIcon,
+  ClockIcon,
   PlusCircleIcon,
   UserCircleIcon,
   UsersIcon,
@@ -26,7 +27,7 @@ const Aside = () => {
 
   // --- 2. CHECK PERMISSION ---
   const isStoreKeeper = role === "storekeeper";
-  const isLabCoordinator = role === "lab_coordinator";
+  const isLabOC = role === "lab_oc" || role === "hod" || role === "lab_coordinator";
 
   const productCategories = [
     "chemical",
@@ -105,6 +106,12 @@ const Aside = () => {
           </Link>
         </li>
       ))}
+      <li className="mt-2">
+        <Link to={"/activity-log"} className={isActivePath("/activity-log")}>
+          <ClockIcon className="h-6 w-6" />
+          Activity Log
+        </Link>
+      </li>
 
       {/* --- ADD PRODUCT BTN: Visible only on Home Page AND if Storekeeper --- */}
 
@@ -128,8 +135,8 @@ const Aside = () => {
         </>
       )}
 
-      {/* --- ADMINISTRATION SECTION: Visible only if Lab Coordinator --- */}
-      {isLabCoordinator && (
+      {/* --- ADMINISTRATION SECTION: Visible only if Lab OC or HOD --- */}
+      {isLabOC && (
         <>
           <div className="text-xl pb-2 border-b-2 border-primary mt-4">
             Administration

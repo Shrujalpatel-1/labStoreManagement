@@ -1,5 +1,6 @@
 import IssuedItem from "../Models/issueModal.js";
 import Product from "../Models/productModal.js";
+import Log from "../Models/logModel.js";
 
 export const getIssuedItemsController = async (req, res) => {
   try {
@@ -27,17 +28,50 @@ export const createIssuedItemController = async (req, res) => {
       isReturnable,
       issueDate,
       expectedReturnDate,
+      isAvailableAfterIssue, // New field for chemicals
     } = req.body;
 
-    const numQuantity = Number(quantity);
+    // 1. Find the product first to check its category
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ status: false, message: "Product not found" });
+    }
 
-    // 1. ATOMIC UPDATE: Find the product ONLY if it has enough stock, and decrement it.
-    // This prevents race conditions and over-issuing.
-    const updatedProduct = await Product.findOneAndUpdate(
-      { _id: productId, quantityAvailable: { $gte: numQuantity } },
-      { $inc: { quantityAvailable: -numQuantity } },
-      { new: true } 
-    );
+    let updatedProduct;
+    let finalQuantity = 1;
+
+    if (product.category === "chemical") {
+      // For chemicals, we check if it's currently available
+      const isCurrentlyAvailable = product.quantityAvailable !== "no" && product.quantityAvailable !== 0 && product.quantityAvailable !== "0";
+      
+      if (!isCurrentlyAvailable) {
+        return res.status(400).json({ 
+          status: false, 
+          message: "Chemical is already issued or not available." 
+        });
+      }
+      
+      // Update based on the choice from the frontend
+      // If user says "yes" it is still available, we keep it "yes"
+      // If user says "no", we set it to "no"
+      const newStatus = isAvailableAfterIssue === "no" ? "no" : "yes";
+
+      updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        { quantityAvailable: newStatus },
+        { new: true }
+      );
+      finalQuantity = 1; // Record 1 unit issued in the database
+    } else {
+      const numQuantity = Number(quantity);
+      // ATOMIC UPDATE: Find the product ONLY if it has enough stock, and decrement it.
+      updatedProduct = await Product.findOneAndUpdate(
+        { _id: productId, quantityAvailable: { $gte: numQuantity } },
+        { $inc: { quantityAvailable: -numQuantity } },
+        { new: true } 
+      );
+      finalQuantity = numQuantity;
+    }
 
     if (!updatedProduct) {
       return res.status(400).json({ 
@@ -50,7 +84,7 @@ export const createIssuedItemController = async (req, res) => {
     const newItemData = {
       productId,
       productName,
-      quantity: numQuantity,
+      quantity: finalQuantity,
       studentName,
       registrationNumber,
       course,
@@ -65,6 +99,16 @@ export const createIssuedItemController = async (req, res) => {
     }
 
     const issuedItem = await IssuedItem.create(newItemData);
+
+    // Record Log
+    await Log.create({
+      productId: product._id,
+      productName: product.name,
+      category: product.category,
+      action: "Issued",
+      details: `Issued ${finalQuantity} to ${studentName} (${registrationNumber}). Still Available: ${updatedProduct.quantityAvailable}`,
+      performedBy: req.user.email,
+    });
 
     return res.status(200).json({
       status: true,
@@ -134,11 +178,22 @@ export const returnIssuedItemController = async (req, res) => {
     }
 
     // 2. ATOMIC UPDATE: Increment the product's available stock
-    const updatedProduct = await Product.findOneAndUpdate(
-      { _id: issuedItem.productId },
-      { $inc: { quantityAvailable: issuedItem.quantity } },
-      { new: true }
-    );
+    const product = await Product.findById(issuedItem.productId);
+    let updatedProduct;
+
+    if (product && product.category === "chemical") {
+      updatedProduct = await Product.findByIdAndUpdate(
+        issuedItem.productId,
+        { quantityAvailable: "yes" },
+        { new: true }
+      );
+    } else {
+      updatedProduct = await Product.findOneAndUpdate(
+        { _id: issuedItem.productId },
+        { $inc: { quantityAvailable: issuedItem.quantity } },
+        { new: true }
+      );
+    }
 
     // If product was deleted from DB in the meantime, we still allow marking the issue as returned
     if (!updatedProduct) {
@@ -149,6 +204,16 @@ export const returnIssuedItemController = async (req, res) => {
     issuedItem.isReturned = true;
     issuedItem.actualReturnDate = new Date();
     await issuedItem.save();
+
+    // Record Log
+    await Log.create({
+      productId: issuedItem.productId,
+      productName: issuedItem.productName,
+      category: product ? product.category : "N/A",
+      action: "Returned",
+      details: `Item returned by ${issuedItem.studentName}. Stock restored.`,
+      performedBy: req.user.email,
+    });
 
     return res.status(200).json({ 
       status: true, 

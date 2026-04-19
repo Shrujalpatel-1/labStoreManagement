@@ -43,6 +43,7 @@ const ModalAdd = (props) => {
   // --- Quantity is optional, but if entered, must not be negative ---
   const validateQuantity = (value, fieldName) => {
     if (!value || String(value).trim() === "") return true;
+    if (currentCategory === "chemical") return true; // Allow any string for chemicals
     if (Number(value) < 0) {
       return `${fieldName} cannot be negative`;
     }
@@ -65,6 +66,12 @@ const ModalAdd = (props) => {
     // CLEANUP: If Quantity fields are empty, delete them
     if (!cleanData.quantityOrdered) delete cleanData.quantityOrdered;
     if (!cleanData.quantityAvailable) delete cleanData.quantityAvailable;
+
+    // Convert non-chemical quantities to Numbers
+    if (currentCategory !== "chemical") {
+      if (cleanData.quantityOrdered) cleanData.quantityOrdered = Number(cleanData.quantityOrdered);
+      if (cleanData.quantityAvailable) cleanData.quantityAvailable = Number(cleanData.quantityAvailable);
+    }
 
     let myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -289,11 +296,11 @@ const ModalAdd = (props) => {
                   <span className="label-text">Quantity Ordered</span>
                 </div>
                 <input
-                  type="number"
+                  type={currentCategory === "chemical" ? "text" : "number"}
                   {...register("quantityOrdered", {
                     validate: (v) => validateQuantity(v, "Quantity Ordered"),
                   })}
-                  min={0}
+                  min={currentCategory === "chemical" ? undefined : 0}
                   name="quantityOrdered"
                   placeholder="Type here"
                   className="input input-bordered w-full lg:max-w-xs"
@@ -310,16 +317,26 @@ const ModalAdd = (props) => {
                 <div className="label">
                   <span className="label-text">Quantity Available</span>
                 </div>
-                <input
-                  type="number"
-                  {...register("quantityAvailable", {
-                    validate: (v) => validateQuantity(v, "Quantity Available"),
-                  })}
-                  min={0}
-                  name="quantityAvailable"
-                  placeholder="Type here"
-                  className="input input-bordered w-full lg:max-w-xs "
-                />
+                {currentCategory === "chemical" ? (
+                  <select
+                    {...register("quantityAvailable")}
+                    className="select select-bordered w-full lg:max-w-xs"
+                  >
+                    <option value="yes">Yes (Available)</option>
+                    <option value="no">No (Not Available)</option>
+                  </select>
+                ) : (
+                  <input
+                    type="number"
+                    {...register("quantityAvailable", {
+                      validate: (v) => validateQuantity(v, "Quantity Available"),
+                    })}
+                    min={0}
+                    name="quantityAvailable"
+                    placeholder="Type here"
+                    className="input input-bordered w-full lg:max-w-xs "
+                  />
+                )}
               </label>
               {errors.quantityAvailable && (
                 <p className="text-xs text-red-600 ps-2 mt-1">

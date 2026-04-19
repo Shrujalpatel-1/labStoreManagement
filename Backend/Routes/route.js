@@ -12,11 +12,13 @@ import {
 
 import {
   getProductsByCategoryController,
-  getAllProductsController,
   insertProductController,
   updateProductController,
   deleteProductController,
-  getLastUpdatedController
+  getAllProductsController,
+  getLastUpdatedController,
+  getLogsController,
+  runMigration,
 } from "../Controllers/productController.js";
 
 import {
@@ -43,6 +45,7 @@ route.get("/users/list", authMiddleware, getAllUsersController);
 route.post("/users/delete", authMiddleware, deleteUserController);
 
 route.get("/system/last-updated ", authMiddleware, getLastUpdatedController);
+route.get("/system/migrate", authMiddleware, runMigration);
 
 //
 //  PRODUCT ENDPOINTS
@@ -81,4 +84,8 @@ route.get("/getissue", authMiddleware, getIssuedItemsController);
 route.post("/createissue", authMiddleware, createIssuedItemController);
 route.post("/deleteissue", authMiddleware, deleteIssuedItemController);
 route.post("/returnissue", authMiddleware, returnIssuedItemController);
+
+//  LOGS ENDPOINT
+route.get("/logs", authMiddleware, getLogsController);
+
 export default route;

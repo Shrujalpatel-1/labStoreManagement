@@ -152,8 +152,11 @@ const Dashboard = () => {
 
   const downloadLowStockProducts = () => {
     const lowStockProducts = products.filter((p) => {
+      if (p.category === "chemical") {
+        return p.quantityAvailable === "no" || p.quantityAvailable === 0 || p.quantityAvailable === "0";
+      }
       if (p.quantityOrdered <= 0) return false;
-      return (p.quantityAvailable / p.quantityOrdered) * 100 < 30;
+      return (Number(p.quantityAvailable) / Number(p.quantityOrdered)) * 100 < 30;
     });
 
     if (lowStockProducts.length === 0) {
@@ -288,12 +291,14 @@ const Dashboard = () => {
   );
 
   const renderTableRow = (elem, i) => {
-    const stockPercentage =
-      elem.quantityOrdered > 0
-        ? (elem.quantityAvailable / elem.quantityOrdered) * 100
-        : 100;
+    let stockPercentage = 100;
+    if (elem.category !== "chemical" && elem.quantityOrdered > 0) {
+      stockPercentage = (Number(elem.quantityAvailable) / Number(elem.quantityOrdered)) * 100;
+    }
+
     const lowStockIndicator =
-      stockPercentage < 30 ? (
+      (elem.category === "chemical" && (elem.quantityAvailable === "no" || elem.quantityAvailable === 0 || elem.quantityAvailable === "0")) ||
+      (elem.category !== "chemical" && stockPercentage < 30) ? (
         <span className="w-3 h-3 bg-red-600 rounded-full shadow-lg shadow-green-400/50 mr-2 animate-pulse"></span>
       ) : null;
     let rowClassName = "hover";

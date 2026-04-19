@@ -26,6 +26,8 @@ const ModalUpdate = (props) => {
     // If empty, return true (valid)
     if (!value || String(value).trim() === "") return true;
 
+    if (props.updateObj.category === "chemical") return true; // Allow any string for chemicals
+
     // If value exists, check if negative
     if (Number(value) < 0) {
       return `${fieldName} cannot be negative`;
@@ -51,6 +53,12 @@ const ModalUpdate = (props) => {
     if (!cleanData.quantityOrdered) delete cleanData.quantityOrdered;
     if (!cleanData.quantityAvailable) delete cleanData.quantityAvailable;
     if (!cleanData.storageTemp) delete cleanData.storageTemp;
+
+    // Convert non-chemical quantities to Numbers
+    if (props.updateObj.category !== "chemical") {
+      if (cleanData.quantityOrdered) cleanData.quantityOrdered = Number(cleanData.quantityOrdered);
+      if (cleanData.quantityAvailable) cleanData.quantityAvailable = Number(cleanData.quantityAvailable);
+    }
 
     let myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -94,12 +102,23 @@ const ModalUpdate = (props) => {
   };
 
   useEffect(() => {
+    // Determine the initial value for quantityAvailable if it's a chemical
+    let qtyAvail = props.updateObj.quantityAvailable;
+    if (props.updateObj.category === "chemical") {
+      // If it's "yes" or a number > 0, set it to "yes". Else "no"
+      if (qtyAvail === "yes" || (typeof qtyAvail === "number" && qtyAvail > 0) || (typeof qtyAvail === "string" && !isNaN(qtyAvail) && Number(qtyAvail) > 0)) {
+        qtyAvail = "yes";
+      } else if (qtyAvail === "no" || qtyAvail === 0 || qtyAvail === "0") {
+        qtyAvail = "no";
+      }
+    }
+
     // Set default values when updateObj changes
     reset({
       name: props.updateObj.name,
       storageTemp: props.updateObj.storageTemp,
       quantityOrdered: props.updateObj.quantityOrdered,
-      quantityAvailable: props.updateObj.quantityAvailable,
+      quantityAvailable: qtyAvail,
       brand: props.updateObj.brand,
       lotNo: props.updateObj.lotNo,
       // Format dates for input type="date"
@@ -304,16 +323,26 @@ const ModalUpdate = (props) => {
                 <div className="label">
                   <span className="label-text">Quantity Available</span>
                 </div>
-                <input
-                  type="text"
-                  {...register("quantityAvailable", {
-                    validate: (v) => validateQuantity(v, "Quantity Available"),
-                  })}
-                  min={0}
-                  name="quantityAvailable"
-                  placeholder="Type here"
-                  className="input input-bordered w-full lg:max-w-xs "
-                />
+                {props.updateObj.category === "chemical" ? (
+                  <select
+                    {...register("quantityAvailable")}
+                    className="select select-bordered w-full lg:max-w-xs"
+                  >
+                    <option value="yes">Yes (Available)</option>
+                    <option value="no">No (Not Available)</option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    {...register("quantityAvailable", {
+                      validate: (v) => validateQuantity(v, "Quantity Available"),
+                    })}
+                    min={0}
+                    name="quantityAvailable"
+                    placeholder="Type here"
+                    className="input input-bordered w-full lg:max-w-xs "
+                  />
+                )}
               </label>
               {errors.quantityAvailable && (
                 <p className="text-xs text-red-600 ps-2 mt-1">

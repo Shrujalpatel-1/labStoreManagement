@@ -66,9 +66,9 @@ export const loginController = async (req, res) => {
 
     // Generate a JWT token
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
 
     let options = {
@@ -140,17 +140,20 @@ export const setupInitialUserController = async (req, res) => {
       return res.status(403).json({ status: false, message: "System is already initialized." });
     }
 
-    const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { email, password, role } = req.body;
     
-    // First user is ALWAYS a lab_coordinator
-    const newUser = new User({ email, password: hashedPassword, role: "lab_coordinator" });
+    // First user can choose to be hod or lab_oc
+    if (role !== "hod" && role !== "lab_oc") {
+       return res.status(400).json({ status: false, message: "Initial user must be HOD or Lab OC." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ email, password: hashedPassword, role });
     await newUser.save();
 
-    res.status(200).json({ status: true, message: "Initial Lab Coordinator created successfully." });
+    res.status(200).json({ status: true, message: `Initial ${role === "hod" ? "HOD" : "Lab OC"} created successfully.` });
   } catch (error) {
     if (error.name === "ValidationError") {
-      // Extract the exact validation message from Mongoose
       const messages = Object.values(error.errors).map(val => val.message);
       return res.status(400).json({ status: false, message: messages.join(", ") });
     }
@@ -159,25 +162,36 @@ export const setupInitialUserController = async (req, res) => {
   }
 };
 
-// 3. SECURE ADD USER (Protected, lab_coordinator only)
+// 3. SECURE ADD USER (Protected)
 export const addUserController = async (req, res) => {
   try {
-    // RBAC Check: Ensure requester is lab_coordinator
-    if (req.user.role !== "lab_coordinator") {
-      return res.status(403).json({ status: false, message: "Only Lab Coordinators can add users." });
+    // RBAC Check: Ensure requester is hod or lab_oc
+    if (req.user.role !== "hod" && req.user.role !== "lab_oc" && req.user.role !== "lab_coordinator") {
+      return res.status(403).json({ status: false, message: "Only HOD or Lab OC can add users." });
     }
 
     const { email, password, role } = req.body;
 
-    // --- ENFORCE LIMITS ---
-    if (role === "storekeeper") {
-      const storekeeperCount = await User.countDocuments({ role: "storekeeper" });
-      if (storekeeperCount >= 1) return res.status(400).json({ status: false, message: "Limit reached: Only 1 Storekeeper allowed." });
-    } else if (role === "lab_coordinator") {
-      const coordCount = await User.countDocuments({ role: "lab_coordinator" });
-      if (coordCount >= 5) return res.status(400).json({ status: false, message: "Limit reached: Maximum 5 Lab Coordinators allowed." });
-    } else {
-       return res.status(400).json({ status: false, message: "Invalid role." });
+    // --- ENFORCE STRICT 3-ACCOUNT LIMIT (Total users <= 3) ---
+    const totalUsers = await User.countDocuments();
+    if (totalUsers >= 3) {
+      return res.status(400).json({ 
+        status: false, 
+        message: "Maximum limit reached: The system allows only 3 accounts in total (1 HOD, 1 Lab OC, 1 Storekeeper)." 
+      });
+    }
+
+    // Role-specific check
+    const roleMap = {
+      hod: "HOD",
+      lab_oc: "Lab OC",
+      lab_coordinator: "Lab OC", // Mapping old for check
+      storekeeper: "Storekeeper"
+    };
+
+    const countForRole = await User.countDocuments({ role: { $in: [role, role === "lab_oc" ? "lab_coordinator" : ""] } });
+    if (countForRole >= 1) {
+      return res.status(400).json({ status: false, message: `A ${roleMap[role]} already exists.` });
     }
 
     const existingUser = await User.findOne({ email });
@@ -187,7 +201,7 @@ export const addUserController = async (req, res) => {
     const newUser = new User({ email, password: hashedPassword, role });
     await newUser.save();
 
-    res.status(200).json({ status: true, message: `${role} added successfully.` });
+    res.status(200).json({ status: true, message: `${roleMap[role]} added successfully.` });
   } catch (error) {
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map(val => val.message);
@@ -198,16 +212,20 @@ export const addUserController = async (req, res) => {
   }
 };
 
-// 4. GET ALL USERS (Protected, lab_coordinator only)
+// 4. GET ALL USERS (Protected)
 export const getAllUsersController = async (req, res) => {
-  if (req.user.role !== "lab_coordinator") return res.status(403).json({ status: false, message: "Forbidden" });
+  if (req.user.role !== "hod" && req.user.role !== "lab_oc" && req.user.role !== "lab_coordinator") {
+    return res.status(403).json({ status: false, message: "Forbidden" });
+  }
   const users = await User.find({}, { password: 0 }); // Exclude passwords
   res.status(200).json({ status: true, data: users });
 };
 
-// 5. DELETE USER (Protected, lab_coordinator only)
+// 5. DELETE USER (Protected)
 export const deleteUserController = async (req, res) => {
-  if (req.user.role !== "lab_coordinator") return res.status(403).json({ status: false, message: "Forbidden" });
+  if (req.user.role !== "hod" && req.user.role !== "lab_oc" && req.user.role !== "lab_coordinator") {
+    return res.status(403).json({ status: false, message: "Forbidden" });
+  }
   
   const { userId } = req.body;
   if (req.user.userId === userId) return res.status(400).json({ status: false, message: "You cannot delete yourself." });

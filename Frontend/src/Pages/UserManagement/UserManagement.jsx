@@ -12,10 +12,10 @@ const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const { register, handleSubmit, reset } = useForm();
 
-  // Redirect if not Coordinator
+  // Redirect if not Authorized
   useEffect(() => {
     if (!loginStatus) navigate("/login");
-    else if (role !== "lab_coordinator") {
+    else if (role !== "hod" && role !== "lab_oc" && role !== "lab_coordinator") {
       toast.error("Unauthorized");
       navigate("/");
     } else {
@@ -29,7 +29,8 @@ const UserManagement = () => {
     if (result.status) setUsers(result.data);
   };
 
-  const coordCount = users.filter(u => u.role === "lab_coordinator").length;
+  const hodCount = users.filter(u => u.role === "hod").length;
+  const ocCount = users.filter(u => u.role === "lab_oc" || u.role === "lab_coordinator").length;
   const storeCount = users.filter(u => u.role === "storekeeper").length;
 
   const onAddUser = async (data) => {
@@ -79,7 +80,8 @@ const UserManagement = () => {
           </div>
           
           <div className="flex gap-4 mb-4">
-            <div className="badge badge-lg p-4">Coordinators: {coordCount} / 5</div>
+            <div className="badge badge-lg p-4">HOD: {hodCount} / 1</div>
+            <div className="badge badge-lg p-4">Lab OC: {ocCount} / 1</div>
             <div className="badge badge-lg p-4">Storekeepers: {storeCount} / 1</div>
           </div>
 
@@ -117,7 +119,8 @@ const UserManagement = () => {
             <input type="email" placeholder="Email" {...register("email")} className="input input-bordered w-full" required />
             <input type="password" placeholder="Password" {...register("password")} className="input input-bordered w-full" required />
             <select {...register("role")} className="select select-bordered w-full">
-              <option value="lab_coordinator" disabled={coordCount >= 5}>Lab Coordinator {coordCount >= 5 && "(Limit Reached)"}</option>
+              <option value="hod" disabled={hodCount >= 1}>HOD {hodCount >= 1 && "(Limit Reached)"}</option>
+              <option value="lab_oc" disabled={ocCount >= 1}>Lab OC {ocCount >= 1 && "(Limit Reached)"}</option>
               <option value="storekeeper" disabled={storeCount >= 1}>Storekeeper {storeCount >= 1 && "(Limit Reached)"}</option>
             </select>
             <div className="modal-action">

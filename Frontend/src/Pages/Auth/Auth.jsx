@@ -60,7 +60,7 @@ const Auth = () => {
 
         const storageData = {
           role: result.data.role,
-          expiry: Date.now() + 2 * 24 * 60 * 60 * 1000,
+          expiry: Date.now() + 1 * 24 * 60 * 60 * 1000, // 24 hours
         };
 
         localStorage.setItem("mnnit_auth_data", JSON.stringify(storageData));
@@ -170,25 +170,21 @@ const Auth = () => {
             {isSetupMode && (
               <div>
                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">
-                  Role
+                  Select Initial Role
                 </label>
                 
-                {/* Hidden input to securely send the exact role value to the backend */}
-                <input 
-                  type="hidden" 
-                  value="lab_coordinator" 
+                <select 
                   {...register("role")} 
-                />
+                  className="select select-bordered w-full bg-white dark:bg-slate-900/50 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                  required
+                >
+                  <option value="" disabled selected>-- Choose Role --</option>
+                  <option value="hod">HOD (Head of Department)</option>
+                  <option value="lab_oc">Lab OC (Officer-in-Charge)</option>
+                </select>
                 
-                {/* Visible disabled input for UX confirmation */}
-                <input
-                  type="text"
-                  value="Lab Coordinator"
-                  disabled
-                  className="w-full p-2.5 border rounded-md bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none"
-                />
-                <p className="text-xs mt-1 text-slate-500 dark:text-slate-400 font-medium">
-                  The initial setup account is strictly assigned as a Lab Coordinator.
+                <p className="text-xs mt-2 text-slate-500 dark:text-slate-400 font-medium leading-relaxed bg-slate-50 dark:bg-slate-900/40 p-2 rounded border border-slate-200 dark:border-slate-700/50">
+                  <strong className="text-blue-900 dark:text-blue-400">Security Note:</strong> The first account created will have administrative privileges to manage the system.
                 </p>
               </div>
             )}

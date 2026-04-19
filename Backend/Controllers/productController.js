@@ -1,5 +1,79 @@
 import Product from "../Models/productModal.js";
 import IssuedItem from "../Models/issueModal.js";
+import Log from "../Models/logModel.js";
+import User from "../Models/userModel.js";
+
+// ✅ Migration Controller (Run once to sync old data)
+export const runMigration = async (req, res) => {
+  try {
+    // 1. Migrate Roles: lab_coordinator -> lab_oc
+    await User.updateMany(
+      { role: "lab_coordinator" },
+      { $set: { role: "lab_oc" } }
+    );
+
+    // 2. Normalize Chemical Quantities: numeric -> string
+    const chemicals = await Product.find({ category: "chemical" });
+    for (const chem of chemicals) {
+      if (typeof chem.quantityAvailable === "number") {
+        const newStatus = chem.quantityAvailable > 0 ? "yes" : "no";
+        await Product.findByIdAndUpdate(chem._id, { quantityAvailable: newStatus });
+      }
+    }
+
+    // 3. Normalize Other Quantities: ensure they are Numbers
+    const nonChemicals = await Product.find({ category: { $ne: "chemical" } });
+    for (const item of nonChemicals) {
+      if (typeof item.quantityAvailable === "string") {
+        let numVal = Number(item.quantityAvailable);
+        if (isNaN(numVal)) numVal = 0;
+        await Product.findByIdAndUpdate(item._id, { quantityAvailable: numVal });
+      }
+    }
+
+    return res.status(200).json({ status: true, message: "Migration completed successfully. Roles and Quantities normalized." });
+  } catch (error) {
+    console.error("Migration Error:", error);
+    return res.status(500).json({ status: false, message: "Migration failed", error: error.message });
+  }
+};
+
+// ✅ Get activity logs (Paginated + Search + Last 3 months)
+export const getLogsController = async (req, res) => {
+  try {
+    const { page = 1, limit = 50, search = "" } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    // Build Query
+    const query = {
+      createdAt: { $gte: threeMonthsAgo }
+    };
+
+    if (search) {
+      query.productName = { $regex: search, $options: "i" };
+    }
+
+    const logs = await Log.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const totalLogs = await Log.countDocuments(query);
+
+    return res.status(200).json({ 
+      status: true, 
+      data: logs,
+      total: totalLogs,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalLogs / limit)
+    });
+  } catch (error) {
+    return res.status(500).json({ status: false, message: "Failed to fetch logs", error });
+  }
+};
 
 // ✅ Get all products of a specific category
 export const getProductsByCategoryController = async (req, res) => {
@@ -55,7 +129,17 @@ export const insertProductController = async (req, res) => {
     //     .json({ status: false, message: "Chemicals require expiry date" });
     // }
 
-    await Product.create(obj);
+    const product = await Product.create(obj);
+
+    // Record Log
+    await Log.create({
+      productId: product._id,
+      productName: product.name,
+      category: product.category,
+      action: "Added",
+      details: `Product added with category: ${product.category}`,
+      performedBy: req.user.email,
+    });
 
     return res
       .status(200)
@@ -71,7 +155,47 @@ export const insertProductController = async (req, res) => {
 export const updateProductController = async (req, res) => {
   const { productId, newdata } = req.body;
   try {
-    await Product.findOneAndUpdate({ _id: productId }, newdata);
+    const oldProduct = await Product.findById(productId);
+    if (!oldProduct) {
+      return res.status(404).json({ status: false, message: "Product not found" });
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate({ _id: productId }, newdata, { new: true });
+    
+    if (updatedProduct) {
+      // Generate detailed change list
+      const changes = [];
+      for (const key in newdata) {
+        let oldVal = oldProduct[key];
+        let newVal = newdata[key];
+
+        // Date-Aware Comparison
+        if (oldVal instanceof Date || (key.toLowerCase().includes("date") && oldVal)) {
+          const oldDateStr = new Date(oldVal).toISOString().split("T")[0];
+          const newDateStr = new Date(newVal).toISOString().split("T")[0];
+          
+          if (oldDateStr === newDateStr) continue; // Skip if same day
+          
+          oldVal = oldDateStr;
+          newVal = newDateStr;
+        }
+
+        if (String(oldVal) !== String(newVal)) {
+          changes.push(`${key}: "${oldVal || "N/A"}" → "${newVal}"`);
+        }
+      }
+
+      // Record Detailed Log
+      await Log.create({
+        productId: updatedProduct._id,
+        productName: updatedProduct.name,
+        category: updatedProduct.category,
+        action: "Updated",
+        details: changes.length > 0 ? `Changed: ${changes.join(" | ")}` : "No values changed (Saved without edits)",
+        performedBy: req.user.email,
+      });
+    }
+
     return res
       .status(200)
       .json({ status: true, message: "Product updated successfully" });
@@ -87,6 +211,18 @@ export const deleteProductController = async (req, res) => {
   const { productId } = req.body;
 
   try {
+    const product = await Product.findById(productId);
+    if (product) {
+      // Record Log
+      await Log.create({
+        productName: product.name,
+        category: product.category,
+        action: "Deleted",
+        details: `Product removed from ${product.category}`,
+        performedBy: req.user.email,
+      });
+    }
+
     await Product.deleteOne({ _id: productId });
     return res
       .status(200)

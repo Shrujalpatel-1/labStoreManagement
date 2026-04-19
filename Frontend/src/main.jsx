@@ -18,6 +18,7 @@ import { store } from "./Redux/Store.js";
 import Auth from "./Pages/Auth/Auth.jsx";
 import Profile from "./Pages/Profile/Profile.jsx";
 import UserManagement from "./Pages/UserManagement/UserManagement.jsx";
+import ActivityLog from "./Pages/ActivityLog/ActivityLog.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -29,6 +30,7 @@ const router = createBrowserRouter(
       <Route path="/view-issued" element={<ViewIssued />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/users" element={<UserManagement />} />
+      <Route path="/activity-log" element={<ActivityLog />} />
     </Route>
   )
 );
