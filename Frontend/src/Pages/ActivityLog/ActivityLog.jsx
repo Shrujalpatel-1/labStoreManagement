@@ -157,7 +157,7 @@ const ActivityLog = () => {
                 )}
               </form>
               <div className="text-sm opacity-70 font-medium">
-                Showing <span className="text-primary">{logs.length}</span> of {totalCount} logs (Last 3 Months)
+                Showing <span className="text-primary">{logs.length}</span> of {totalCount} logs (Last 6 Months)
               </div>
             </div>
           </div>

@@ -32,5 +32,8 @@ const logSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Auto-delete logs older than 6 months (180 days)
+logSchema.index({ createdAt: 1 }, { expireAfterSeconds: 15552000 });
+
 const Log = mongoose.model("Log", logSchema);
 export default Log;

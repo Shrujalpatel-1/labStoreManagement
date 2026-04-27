@@ -38,18 +38,18 @@ export const runMigration = async (req, res) => {
   }
 };
 
-// ✅ Get activity logs (Paginated + Search + Last 3 months)
+// ✅ Get activity logs (Paginated + Search + Last 6 months)
 export const getLogsController = async (req, res) => {
   try {
     const { page = 1, limit = 50, search = "" } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const threeMonthsAgo = new Date();
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const sixMonthAgo = new Date();
+    sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 6);
 
     // Build Query
     const query = {
-      createdAt: { $gte: threeMonthsAgo }
+      createdAt: { $gte: sixMonthAgo }
     };
 
     if (search) {
