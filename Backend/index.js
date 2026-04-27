@@ -26,11 +26,11 @@ connectDB()
   // starting the server 
     try {
       const migrated = await User.updateMany(
-        { role: "faculty" }, 
-        { $set: { role: "lab_coordinator" } }
+        { role: { $in: ["faculty", "lab_coordinator"] } }, 
+        { $set: { role: "lab_oc" } }
       );
       if (migrated.modifiedCount > 0) {
-        console.log(`Migrated ${migrated.modifiedCount} faculty to lab_coordinator.`);
+        console.log(`Migrated ${migrated.modifiedCount} accounts to lab_oc.`);
       }
     } catch (err) {
       console.error("Migration failed:", err);

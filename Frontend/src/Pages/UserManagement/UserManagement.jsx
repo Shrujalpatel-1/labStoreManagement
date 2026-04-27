@@ -15,7 +15,7 @@ const UserManagement = () => {
   // Redirect if not Authorized
   useEffect(() => {
     if (!loginStatus) navigate("/login");
-    else if (role !== "hod" && role !== "lab_oc" && role !== "lab_coordinator") {
+    else if (role !== "hod" && role !== "lab_oc" ) {
       toast.error("Unauthorized");
       navigate("/");
     } else {
@@ -30,7 +30,7 @@ const UserManagement = () => {
   };
 
   const hodCount = users.filter(u => u.role === "hod").length;
-  const ocCount = users.filter(u => u.role === "lab_oc" || u.role === "lab_coordinator").length;
+  const ocCount = users.filter(u => u.role === "lab_oc").length;
   const storeCount = users.filter(u => u.role === "storekeeper").length;
 
   const onAddUser = async (data) => {

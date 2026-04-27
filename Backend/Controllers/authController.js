@@ -4,36 +4,75 @@ import bcrypt from "bcrypt";
 
 export const registerController = async (req, res) => {
   try {
-    // 1. Allow 'role' to be passed during registration (optional)
     const { email, password, role } = req.body;
 
-    // Check if user already exists
+    if (!email.toLowerCase().endsWith("@mnnit.ac.in")) {
+      return res.status(403).json({ 
+        status: false, 
+        message: "Access Denied: Organization email (@mnnit.ac.in) is strictly required." 
+      });
+    }
+
+    const totalUsers = await User.countDocuments();
+
+    // 1. First user logic: must be hod or lab_oc
+    if (totalUsers === 0) {
+      if (role !== "hod" && role !== "lab_oc") {
+        return res.status(400).json({ 
+          status: false, 
+          message: "The first user must be either HOD or Lab OC." 
+        });
+      }
+    } else {
+      // 2. Limit total users to 3
+      if (totalUsers >= 3) {
+        return res.status(400).json({ 
+          status: false, 
+          message: "Maximum limit reached: The system allows only 3 accounts in total (1 HOD, 1 Lab OC, 1 Storekeeper)." 
+        });
+      }
+
+      // 3. Limit 1 per role
+      const roleMap = {
+        hod: "HOD",
+        lab_oc: "Lab OC",
+        storekeeper: "Storekeeper"
+      };
+
+      const existingRole = await User.findOne({ role });
+      if (existingRole) {
+        return res.status(400).json({ 
+          status: false, 
+          message: `A ${roleMap[role] || role} already exists. Only one account per role is allowed.` 
+        });
+      }
+    }
+
+    // Check if user already exists with same email
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      // Changed 404 to 409 (Conflict) which is more accurate for duplicates
-      return res
-        .status(409)
-        .json({ status: false, message: "User already exists" });
+      return res.status(409).json({ status: false, message: "User already exists with this email." });
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user (Pass role if provided, otherwise model defaults to 'faculty')
+    // Create a new user
     const newUser = new User({
       email,
       password: hashedPassword,
-      role: role || "faculty",
+      role,
     });
 
     await newUser.save();
 
-    res
-      .status(200)
-      .json({ status: true, message: "User registered successfully" });
+    res.status(200).json({ 
+      status: true, 
+      message: totalUsers === 0 ? "System initialized successfully." : "User registered successfully." 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ status: false, message: "Server error" });
+    console.error("Registration Error:", error);
+    res.status(500).json({ status: false, message: "Server error during registration" });
   }
 };
 
@@ -132,41 +171,11 @@ export const getSetupStatus = async (req, res) => {
   }
 };
 
-// 2. INITIAL SETUP REGISTRATION (Public, only works if DB is empty)
-export const setupInitialUserController = async (req, res) => {
-  try {
-    const userCount = await User.countDocuments();
-    if (userCount > 0) {
-      return res.status(403).json({ status: false, message: "System is already initialized." });
-    }
-
-    const { email, password, role } = req.body;
-    
-    // First user can choose to be hod or lab_oc
-    if (role !== "hod" && role !== "lab_oc") {
-       return res.status(400).json({ status: false, message: "Initial user must be HOD or Lab OC." });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, password: hashedPassword, role });
-    await newUser.save();
-
-    res.status(200).json({ status: true, message: `Initial ${role === "hod" ? "HOD" : "Lab OC"} created successfully.` });
-  } catch (error) {
-    if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({ status: false, message: messages.join(", ") });
-    }
-    console.error(error);
-    res.status(500).json({ status: false, message: "Server error" });
-  }
-};
-
 // 3. SECURE ADD USER (Protected)
 export const addUserController = async (req, res) => {
   try {
     // RBAC Check: Ensure requester is hod or lab_oc
-    if (req.user.role !== "hod" && req.user.role !== "lab_oc" && req.user.role !== "lab_coordinator") {
+    if (req.user.role !== "hod" && req.user.role !== "lab_oc") {
       return res.status(403).json({ status: false, message: "Only HOD or Lab OC can add users." });
     }
 
@@ -185,11 +194,10 @@ export const addUserController = async (req, res) => {
     const roleMap = {
       hod: "HOD",
       lab_oc: "Lab OC",
-      lab_coordinator: "Lab OC", // Mapping old for check
       storekeeper: "Storekeeper"
     };
 
-    const countForRole = await User.countDocuments({ role: { $in: [role, role === "lab_oc" ? "lab_coordinator" : ""] } });
+    const countForRole = await User.countDocuments({ role });
     if (countForRole >= 1) {
       return res.status(400).json({ status: false, message: `A ${roleMap[role]} already exists.` });
     }
@@ -214,7 +222,7 @@ export const addUserController = async (req, res) => {
 
 // 4. GET ALL USERS (Protected)
 export const getAllUsersController = async (req, res) => {
-  if (req.user.role !== "hod" && req.user.role !== "lab_oc" && req.user.role !== "lab_coordinator") {
+  if (req.user.role !== "hod" && req.user.role !== "lab_oc") {
     return res.status(403).json({ status: false, message: "Forbidden" });
   }
   const users = await User.find({}, { password: 0 }); // Exclude passwords
@@ -223,7 +231,7 @@ export const getAllUsersController = async (req, res) => {
 
 // 5. DELETE USER (Protected)
 export const deleteUserController = async (req, res) => {
-  if (req.user.role !== "hod" && req.user.role !== "lab_oc" && req.user.role !== "lab_coordinator") {
+  if (req.user.role !== "hod" && req.user.role !== "lab_oc") {
     return res.status(403).json({ status: false, message: "Forbidden" });
   }
   

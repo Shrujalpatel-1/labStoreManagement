@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["hod", "lab_oc", "storekeeper", "lab_coordinator"], // Keep old for migration
+    enum: ["hod", "lab_oc", "storekeeper"], // Keep old for migration
     default: "lab_oc",
   },
 });

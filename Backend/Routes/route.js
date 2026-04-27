@@ -4,7 +4,7 @@ import {
   loginController,
   logoutController,
   getSetupStatus,
-  setupInitialUserController,
+  registerController,
   addUserController,
   getAllUsersController,
   deleteUserController
@@ -36,10 +36,11 @@ export const route = Router();
 // 茶 AUTH ENDPOINTS
 //
 route.post("/login", loginController);
+route.post("/register", registerController);
 route.get("/logout", logoutController);
 route.get("/getUser", authMiddleware, getUserController);
 route.get("/auth/setup-status", getSetupStatus);
-route.post("/auth/setup", setupInitialUserController);
+route.post("/auth/setup", registerController);
 route.post("/users/add", authMiddleware, addUserController);
 route.get("/users/list", authMiddleware, getAllUsersController);
 route.post("/users/delete", authMiddleware, deleteUserController);

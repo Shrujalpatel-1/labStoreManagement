@@ -27,7 +27,7 @@ const Aside = () => {
 
   // --- 2. CHECK PERMISSION ---
   const isStoreKeeper = role === "storekeeper";
-  const isLabOC = role === "lab_oc" || role === "hod" || role === "lab_coordinator";
+  const isLabOC = role === "lab_oc" || role === "hod";
 
   const productCategories = [
     "chemical",
