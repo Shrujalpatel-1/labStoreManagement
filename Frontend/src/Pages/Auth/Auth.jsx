@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setLoginData } from "../../Redux/login/isLogin";
 import baseurl from "../../utils/baseurl";
-import logo from "../../Images/logo.png";
+import logo from "../../Images/logo.jpeg";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import toast, { Toaster } from "react-hot-toast";
