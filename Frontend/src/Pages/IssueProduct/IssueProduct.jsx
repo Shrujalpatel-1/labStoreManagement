@@ -172,10 +172,10 @@ const IssueProduct = () => {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <h4 className="text-xl capitalize font-bold border-b-2 pb-2">Student Details</h4>
+            <h4 className="text-xl capitalize font-bold border-b-2 pb-2">Details</h4>
             <div className="flex flex-wrap gap-4">
               <label className="form-control flex-1 min-w-[250px]">
-                <div className="label"><span className="label-text">Student Name</span></div>
+                <div className="label"><span className="label-text">Name</span></div>
                 <input type="text" {...register("studentName", { required: "Name required" })} className="input input-bordered w-full" />
                 <span className="text-xs text-error mt-1">{errors.studentName?.message}</span>
               </label>

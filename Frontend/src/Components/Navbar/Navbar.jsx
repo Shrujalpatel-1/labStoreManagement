@@ -64,7 +64,7 @@ const Navbar = () => {
           <div className="icon mx-2 text-primary">
             <BuildingStorefrontIcon className="w-6 h-6" />
           </div>
-          <a className="text-xl font-bold hidden sm:block">Lab Inventory Management</a>
+          <a className="text-xl font-bold hidden sm:block">Lab Store Management</a>
         </div>
         <div className="flex items-center gap-4">
           {/* --- NEW: LAST UPDATED BADGE --- */}

@@ -226,9 +226,17 @@ const Auth = () => {
         {/* --- FOOTER --- */}
         <div className="mt-8 text-center animate-fadeIn">
           <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
+            Supervisor
+          </p>
+          <div className="flex flex-wrap justify-center items-center mb-3 gap-3 text-sm text-slate-600 dark:text-slate-400 font-medium">
+            <span className="hover:text-blue-900 dark:hover:text-blue-400 transition-colors cursor-default">
+              Prof. Shivesh Sharma
+            </span>
+          </div>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
             Developed by Team
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-3 text-sm text-slate-600 dark:text-slate-400 font-medium">
+          <div className="flex flex-wrap justify-center items-center mb-3 gap-3 text-sm text-slate-600 dark:text-slate-400 font-medium">
             <span className="hover:text-blue-900 dark:hover:text-blue-400 transition-colors cursor-default">
               Shrujal Patel
             </span>
