@@ -10,6 +10,7 @@ const getInitialState = () => {
       return {
         loginStatus: true,
         role: parsedData.role,
+        userId: parsedData.userId,
       };
     } else {
       // Expired: clear it
@@ -19,6 +20,7 @@ const getInitialState = () => {
   return {
     loginStatus: false,
     role: null,
+    userId: null,
   };
 };
 
@@ -29,11 +31,13 @@ export const loginSlice = createSlice({
     setLoginData: (state, action) => {
       state.loginStatus = action.payload.status;
       state.role = action.payload.role;
+      state.userId = action.payload.userId;
       // We handle localStorage setting in Auth.jsx, not here, to keep reducer pure
     },
     logout: (state) => {
       state.loginStatus = false;
       state.role = null;
+      state.userId = null;
       localStorage.removeItem("mnnit_auth_data"); // Clear storage
     },
   },

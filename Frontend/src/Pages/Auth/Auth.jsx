@@ -62,12 +62,13 @@ const Auth = () => {
         }
 
         const storageData = {
+          userId: result.data._id,
           role: result.data.role,
           expiry: Date.now() + 1 * 24 * 60 * 60 * 1000, // 24 hours
         };
 
         localStorage.setItem("mnnit_auth_data", JSON.stringify(storageData));
-        dispatch(setLoginData({ status: true, role: result.data.role }));
+        dispatch(setLoginData({ status: true, role: result.data.role, userId: result.data._id }));
         toast.success("Welcome back!");
         navigate("/");
       } else {

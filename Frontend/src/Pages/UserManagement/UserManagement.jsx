@@ -7,7 +7,7 @@ import baseUrl from "../../utils/baseurl";
 import { useForm } from "react-hook-form";
 
 const UserManagement = () => {
-  const { loginStatus, role } = useSelector((state) => state.login);
+  const { loginStatus, role,userId: currentUserId } = useSelector((state) => state.login);
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const { register, handleSubmit, reset } = useForm();
@@ -102,7 +102,9 @@ const UserManagement = () => {
                   <td className="dark:text-slate-300">{u.email}</td>
                   <td className="capitalize dark:text-slate-300">{u.role.replace("_", " ")}</td>
                   <td>
-                    <button className="btn btn-error btn-xs text-white" onClick={() => onDelete(u._id)}>Remove</button>
+                    {u._id !== currentUserId && u.role !== "faculty" && (
+                      <button className="btn btn-error btn-xs text-white" onClick={() => onDelete(u._id)}>Remove</button>
+                    )}
                   </td>
                 </tr>
               ))}
