@@ -41,6 +41,9 @@ export const runMigration = async (req, res) => {
 // ✅ Get activity logs (Paginated + Search + Last 6 months)
 export const getLogsController = async (req, res) => {
   try {
+    if (req.user.role === "faculty") {
+      return res.status(403).json({ status: false, message: "Forbidden: Faculty cannot access activity logs." });
+    }
     const { page = 1, limit = 50, search = "" } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -105,6 +108,9 @@ export const getProductsByCategoryController = async (req, res) => {
 
 // ✅ Insert product
 export const insertProductController = async (req, res) => {
+  if (req.user.role === "faculty") {
+    return res.status(403).json({ status: false, message: "Forbidden: Faculty cannot insert products." });
+  }
   const obj = req.body;
 
   try {
@@ -153,6 +159,9 @@ export const insertProductController = async (req, res) => {
 
 // ✅ Update product
 export const updateProductController = async (req, res) => {
+  if (req.user.role === "faculty") {
+    return res.status(403).json({ status: false, message: "Forbidden: Faculty cannot update products." });
+  }
   const { productId, newdata } = req.body;
   try {
     const oldProduct = await Product.findById(productId);
@@ -208,6 +217,9 @@ export const updateProductController = async (req, res) => {
 
 // ✅ Delete product
 export const deleteProductController = async (req, res) => {
+  if (req.user.role === "faculty") {
+    return res.status(403).json({ status: false, message: "Forbidden: Faculty cannot delete products." });
+  }
   const { productId } = req.body;
 
   try {

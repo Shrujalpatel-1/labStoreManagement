@@ -24,27 +24,28 @@ export const registerController = async (req, res) => {
         });
       }
     } else {
-      // 2. Limit total users to 3
-      if (totalUsers >= 3) {
-        return res.status(400).json({ 
-          status: false, 
-          message: "Maximum limit reached: The system allows only 3 accounts in total (1 HOD, 1 Lab OC, 1 Storekeeper)." 
-        });
-      }
+      // 2. Limit administrative roles
+      if (role !== "faculty") {
+        const adminUsers = await User.countDocuments({ role: { $ne: "faculty" } });
+        if (adminUsers >= 3) {
+          return res.status(400).json({ 
+            status: false, 
+            message: "Maximum limit reached for administrative accounts (1 HOD, 1 Lab OC, 1 Storekeeper)." 
+          });
+        }
 
-      // 3. Limit 1 per role
-      const roleMap = {
-        hod: "HOD",
-        lab_oc: "Lab OC",
-        storekeeper: "Storekeeper"
-      };
-
-      const existingRole = await User.findOne({ role });
-      if (existingRole) {
-        return res.status(400).json({ 
-          status: false, 
-          message: `A ${roleMap[role] || role} already exists. Only one account per role is allowed.` 
-        });
+        const existingRole = await User.findOne({ role });
+        if (existingRole) {
+          const roleMap = {
+            hod: "HOD",
+            lab_oc: "Lab OC",
+            storekeeper: "Storekeeper"
+          };
+          return res.status(400).json({ 
+            status: false, 
+            message: `A ${roleMap[role] || role} already exists. Only one account per administrative role is allowed.` 
+          });
+        }
       }
     }
 
@@ -151,10 +152,10 @@ export const getUserController = async (req, res) => {
         .json({ status: false, msessage: "unauthorized user", error });
     }
 
-    const { email, products, sales } = user;
+    const { email, role, products, sales } = user;
     return res
       .status(200)
-      .json({ status: true, data: { email, products, sales } });
+      .json({ status: true, data: { email, role, products, sales } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ status: false, message: "Server error" });
@@ -181,25 +182,25 @@ export const addUserController = async (req, res) => {
 
     const { email, password, role } = req.body;
 
-    // --- ENFORCE STRICT 3-ACCOUNT LIMIT (Total users <= 3) ---
-    const totalUsers = await User.countDocuments();
-    if (totalUsers >= 3) {
-      return res.status(400).json({ 
-        status: false, 
-        message: "Maximum limit reached: The system allows only 3 accounts in total (1 HOD, 1 Lab OC, 1 Storekeeper)." 
-      });
-    }
+    // --- ENFORCE LIMITS FOR ADMINISTRATIVE ROLES ---
+    if (role !== "faculty") {
+      const adminUsers = await User.countDocuments({ role: { $ne: "faculty" } });
+      if (adminUsers >= 3) {
+        return res.status(400).json({ 
+          status: false, 
+          message: "Maximum limit reached for administrative accounts (1 HOD, 1 Lab OC, 1 Storekeeper)." 
+        });
+      }
 
-    // Role-specific check
-    const roleMap = {
-      hod: "HOD",
-      lab_oc: "Lab OC",
-      storekeeper: "Storekeeper"
-    };
-
-    const countForRole = await User.countDocuments({ role });
-    if (countForRole >= 1) {
-      return res.status(400).json({ status: false, message: `A ${roleMap[role]} already exists.` });
+      const countForRole = await User.countDocuments({ role });
+      if (countForRole >= 1) {
+        const roleMap = {
+          hod: "HOD",
+          lab_oc: "Lab OC",
+          storekeeper: "Storekeeper"
+        };
+        return res.status(400).json({ status: false, message: `A ${roleMap[role]} already exists.` });
+      }
     }
 
     const existingUser = await User.findOne({ email });

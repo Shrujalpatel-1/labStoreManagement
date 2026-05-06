@@ -122,6 +122,7 @@ const UserManagement = () => {
               <option value="hod" disabled={hodCount >= 1}>HOD {hodCount >= 1 && "(Limit Reached)"}</option>
               <option value="lab_oc" disabled={ocCount >= 1}>Lab OC {ocCount >= 1 && "(Limit Reached)"}</option>
               <option value="storekeeper" disabled={storeCount >= 1}>Storekeeper {storeCount >= 1 && "(Limit Reached)"}</option>
+              <option value="faculty">Faculty</option>
             </select>
             <div className="modal-action">
               <button type="button" className="btn" onClick={() => document.getElementById("add_user_modal").close()}>Cancel</button>

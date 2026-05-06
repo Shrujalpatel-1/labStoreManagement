@@ -14,7 +14,7 @@ const IssueProduct = () => {
   const dispatch = useDispatch();
 
   //check Islogin
-  const isLogin = useSelector((state) => state.login.loginStatus);
+  const { loginStatus: isLogin, role } = useSelector((state) => state.login);
   
   // State for the dropdown list
   const [allProducts, setAllProducts] = useState([]);
@@ -38,6 +38,12 @@ const IssueProduct = () => {
   useEffect(() => {
     if (!isLogin) {
       navigate("/login");
+      return;
+    }
+
+    if (role === "faculty") {
+      toast.error("Unauthorized");
+      navigate("/");
       return;
     }
 

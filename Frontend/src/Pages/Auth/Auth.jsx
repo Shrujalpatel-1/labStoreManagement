@@ -184,7 +184,12 @@ const Auth = () => {
                   <option value="" disabled selected>-- Choose Role --</option>
                   <option value="hod">HOD (Head of Department)</option>
                   <option value="lab_oc">Lab OC (Officer-in-Charge)</option>
-                  {!isSetupMode && <option value="storekeeper">Storekeeper</option>}
+                  {!isSetupMode && (
+                    <>
+                      <option value="storekeeper">Storekeeper</option>
+                      <option value="faculty">Faculty</option>
+                    </>
+                  )}
                 </select>
                 {errors.role && (
                    <span className="text-xs text-error mt-1 block px-1">{errors.role.message}</span>

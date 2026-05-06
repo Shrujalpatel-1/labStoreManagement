@@ -28,6 +28,7 @@ const Aside = () => {
   // --- 2. CHECK PERMISSION ---
   const isStoreKeeper = role === "storekeeper";
   const isLabOC = role === "lab_oc" || role === "hod";
+  const isFaculty = role === "faculty";
 
   const productCategories = [
     "chemical",
@@ -106,12 +107,14 @@ const Aside = () => {
           </Link>
         </li>
       ))}
-      <li className="mt-2">
-        <Link to={"/activity-log"} className={isActivePath("/activity-log")}>
-          <ClockIcon className="h-6 w-6" />
-          Activity Log
-        </Link>
-      </li>
+      {!isFaculty && (
+        <li className="mt-2">
+          <Link to={"/activity-log"} className={isActivePath("/activity-log")}>
+            <ClockIcon className="h-6 w-6" />
+            Activity Log
+          </Link>
+        </li>
+      )}
 
       {/* --- ADD PRODUCT BTN: Visible only on Home Page AND if Storekeeper --- */}
 

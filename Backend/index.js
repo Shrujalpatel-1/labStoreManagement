@@ -23,18 +23,7 @@ server.use(express.urlencoded({ extended: true }));
 // connect to db:
 connectDB()
 .then(async ()=>{
-  // starting the server 
-    try {
-      const migrated = await User.updateMany(
-        { role: { $in: ["faculty", "lab_coordinator"] } }, 
-        { $set: { role: "lab_oc" } }
-      );
-      if (migrated.modifiedCount > 0) {
-        console.log(`Migrated ${migrated.modifiedCount} accounts to lab_oc.`);
-      }
-    } catch (err) {
-      console.error("Migration failed:", err);
-    }
+  // starting the server
 
     server.listen(PORT , ()=>{
         console.log("Server is running at " + PORT);

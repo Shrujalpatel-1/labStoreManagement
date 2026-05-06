@@ -14,7 +14,7 @@ import { setProducts, setLastUpdated } from "../../Redux/products/productSlice";
 const ViewIssuedItems = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const isLogin = useSelector((state) => state.login.loginStatus);
+  const { loginStatus: isLogin, role } = useSelector((state) => state.login);
   const issuedItemsList = useSelector((state) => state.issue.issuedItems);
 
   // Modal States
@@ -47,10 +47,13 @@ const ViewIssuedItems = () => {
   useEffect(() => {
     if (!isLogin) {
       navigate("/login");
-    } else if (issuedItemsList.length <= 0) {
+    } else if (role === "faculty") {
+      toast.error("Unauthorized");
+      navigate("/");
+     } else if (issuedItemsList.length <= 0) {
       getIssuedItems();
     }
-  }, [isLogin, issuedItemsList.length, navigate, dispatch]);
+  }, [isLogin, role, issuedItemsList.length, navigate, dispatch]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";

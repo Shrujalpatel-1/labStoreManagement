@@ -18,6 +18,9 @@ export const getIssuedItemsController = async (req, res) => {
 
 export const createIssuedItemController = async (req, res) => {
   try {
+    if (req.user.role === "faculty") {
+      return res.status(403).json({ status: false, message: "Forbidden: Faculty cannot issue items." });
+    }
     const {
       productId, // Added productId
       productName,
@@ -125,6 +128,9 @@ export const createIssuedItemController = async (req, res) => {
 
 export const deleteIssuedItemController = async (req, res) => {
   try {
+    if (req.user.role === "faculty") {
+      return res.status(403).json({ status: false, message: "Forbidden: Faculty cannot delete issued items." });
+    }
     // This 'issueId' variable now holds the '_id' sent from the frontend
     const { issueId } = req.body;
 
@@ -158,6 +164,9 @@ export const deleteIssuedItemController = async (req, res) => {
 
 export const returnIssuedItemController = async (req, res) => {
   try {
+    if (req.user.role === "faculty") {
+      return res.status(403).json({ status: false, message: "Forbidden: Faculty cannot return issued items." });
+    }
     const { issueId } = req.body;
 
     if (!issueId) {

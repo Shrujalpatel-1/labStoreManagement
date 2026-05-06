@@ -16,7 +16,7 @@ import toast, { Toaster } from "react-hot-toast";
 
 const ActivityLog = () => {
   const navigate = useNavigate();
-  const isLogin = useSelector((state) => state.login.loginStatus);
+  const { loginStatus: isLogin, role } = useSelector((state) => state.login);
   
   // State for logs and pagination
   const [logs, setLogs] = useState([]);
@@ -41,22 +41,32 @@ const ActivityLog = () => {
         setCurrentPage(result.currentPage);
         setTotalLogs(result.total);
       } else {
-        toast.error("Failed to load activity logs");
+        if (response.status === 403) {
+          toast.error("Faculty cannot access activity logs");
+          navigate("/");
+        } else {
+          toast.error("Failed to load activity logs");
+        }
       }
     } catch (error) {
       toast.error("Network error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (!isLogin) {
       navigate("/login");
       return;
     }
+    if (role === "faculty") {
+      toast.error("Unauthorized");
+      navigate("/");
+      return;
+    }
     fetchLogs(currentPage, search);
-  }, [isLogin, navigate, fetchLogs, currentPage]);
+  }, [isLogin, role, navigate, fetchLogs, currentPage]);
 
   const handleSearch = (e) => {
     e.preventDefault();
